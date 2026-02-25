@@ -125,6 +125,13 @@ export function useGroup(
     }
   }, [round, fetchSongsForRound]);
 
+  // Poll for updates every 15 seconds
+  useEffect(() => {
+    if (!round) return;
+    const interval = setInterval(refetch, 15_000);
+    return () => clearInterval(interval);
+  }, [round, refetch]);
+
   /** Add a new song by resolving the URL via Odesli and inserting into Supabase */
   const addSong = useCallback(
     async (url: string) => {

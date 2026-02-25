@@ -231,5 +231,11 @@ export function useLeaderboard(groupId: string): UseLeaderboardResult {
     fetchData();
   }, [fetchData]);
 
+  // Poll for updates every 15 seconds
+  useEffect(() => {
+    const interval = setInterval(fetchData, 15_000);
+    return () => clearInterval(interval);
+  }, [fetchData]);
+
   return { members, pastRounds, isLoading, error };
 }
