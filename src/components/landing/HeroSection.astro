@@ -42,9 +42,5 @@ const { locale = 'en' } = Astro.props;
     {t('hero.cta', locale)}
   </a>
 
-  {/* Join link */}
-  <p class="mt-4 text-sm text-text-tertiary">
-    {t('hero.joinText', locale)}{' '}
-    <a href="#" class="text-primary hover:underline">{t('hero.joinLink', locale)}</a>
-  </p>
+  {/* Users join via the group invite link — no standalone join page */}
 </section>
