@@ -1,0 +1,19 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Navbar from '../../components/Navbar.astro';
+import Footer from '../../components/Footer.astro';
+import HeroSection from '../../components/landing/HeroSection.astro';
+import FeaturesSection from '../../components/landing/FeaturesSection.astro';
+import HowItWorksSection from '../../components/landing/HowItWorksSection.astro';
+import { t } from '../../i18n';
+---
+
+<BaseLayout title={t('site.title', 'es')} description={t('site.description', 'es')} locale="es">
+  <Navbar />
+  <main>
+    <HeroSection locale="es" />
+    <FeaturesSection locale="es" />
+    <HowItWorksSection locale="es" />
+  </main>
+  <Footer locale="es" />
+</BaseLayout>

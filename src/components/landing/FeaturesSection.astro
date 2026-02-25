@@ -1,0 +1,104 @@
+---
+import { t } from '../../i18n';
+import { Card } from '../ui/Card';
+import type { Locale } from '../../../site.config';
+
+interface Props {
+  locale?: Locale;
+}
+
+const { locale = 'en' } = Astro.props;
+
+const features = [
+  {
+    titleKey: 'features.crossPlatform.title' as const,
+    descKey: 'features.crossPlatform.desc' as const,
+    color: 'var(--accent)',
+    iconBg: 'bg-accent-soft',
+    icon: 'link',
+  },
+  {
+    titleKey: 'features.rate.title' as const,
+    descKey: 'features.rate.desc' as const,
+    color: 'var(--star)',
+    iconBg: 'bg-star/10',
+    icon: 'star',
+  },
+  {
+    titleKey: 'features.rankings.title' as const,
+    descKey: 'features.rankings.desc' as const,
+    color: 'var(--success)',
+    iconBg: 'bg-success/10',
+    icon: 'trophy',
+  },
+];
+---
+
+<section class="mx-auto max-w-[800px] px-5 pb-15">
+  <div
+    class="grid grid-cols-1 gap-4 sm:grid-cols-3"
+    style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));"
+  >
+    {
+      features.map((f) => (
+        <Card>
+          <div
+            class={`mb-4 flex h-11 w-11 items-center justify-center rounded-[10px] ${f.iconBg}`}
+            style={`color: ${f.color};`}
+          >
+            {f.icon === 'link' && (
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+              </svg>
+            )}
+            {f.icon === 'star' && (
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+            )}
+            {f.icon === 'trophy' && (
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                <path d="M4 22h16" />
+                <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+                <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+                <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+              </svg>
+            )}
+          </div>
+          <h3 class="mb-2 text-base font-semibold text-text">{t(f.titleKey, locale)}</h3>
+          <p class="text-sm leading-relaxed text-text-secondary">{t(f.descKey, locale)}</p>
+        </Card>
+      ))
+    }
+  </div>
+</section>

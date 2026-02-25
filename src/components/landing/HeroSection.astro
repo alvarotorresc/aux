@@ -1,0 +1,47 @@
+---
+import { t } from '../../i18n';
+import { Button } from '../ui/Button';
+import type { Locale } from '../../../site.config';
+
+interface Props {
+  locale?: Locale;
+}
+
+const { locale = 'en' } = Astro.props;
+---
+
+<section
+  class="px-5 pt-20 pb-15 text-center"
+  style="background: radial-gradient(ellipse at 50% 0%, rgba(217, 70, 239, 0.15) 0%, transparent 60%);"
+>
+  {/* Badge */}
+  <div
+    class="mb-6 inline-flex items-center gap-1.5 rounded-full border border-accent/20 bg-accent-soft px-3.5 py-1.5 text-[13px] font-medium text-accent"
+  >
+    <span aria-hidden="true">🎧</span>
+    {t('hero.badge', locale)}
+  </div>
+
+  {/* Title */}
+  <h1 class="mb-4 text-5xl font-bold leading-none tracking-tight text-text">
+    {t('hero.title1', locale)}<br />
+    <span class="text-accent">{t('hero.title2', locale)}</span><br />
+    {t('hero.title3', locale)}
+  </h1>
+
+  {/* Subtitle */}
+  <p class="mx-auto mb-8 max-w-[480px] text-lg leading-relaxed text-text-secondary">
+    {t('hero.subtitle', locale)}
+  </p>
+
+  {/* CTA */}
+  <Button size="lg">
+    {t('hero.cta', locale)}
+  </Button>
+
+  {/* Join link */}
+  <p class="mt-4 text-sm text-text-tertiary">
+    {t('hero.joinText', locale)}{' '}
+    <a href="#" class="text-primary hover:underline">{t('hero.joinLink', locale)}</a>
+  </p>
+</section>
