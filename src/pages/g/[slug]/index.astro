@@ -2,7 +2,7 @@
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import Navbar from '../../../components/Navbar.astro';
 import Footer from '../../../components/Footer.astro';
-import { GroupPlaceholder } from '../../../features/group/GroupPlaceholder';
+import { GroupView } from '../../../features/group/GroupView';
 import { supabase } from '../../../lib/supabase';
 import type { Group, Member } from '../../../lib/types';
 
@@ -41,7 +41,7 @@ const locale = acceptLang.startsWith('es') ? 'es' : 'en';
 <BaseLayout title={typedGroup.name} locale={locale}>
   <Navbar />
   <main>
-    <GroupPlaceholder client:load group={typedGroup} members={typedMembers} locale={locale} />
+    <GroupView client:load group={typedGroup} members={typedMembers} locale={locale} />
   </main>
   <Footer locale={locale} />
 </BaseLayout>
