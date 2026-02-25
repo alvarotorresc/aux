@@ -69,14 +69,13 @@ export function CreateGroup({ locale }: CreateGroupProps) {
         throw groupError;
       }
 
-      // Create the admin member
+      // Create the first member (creator)
       const { data: member, error: memberError } = await supabase
         .from('members')
         .insert({
           group_id: group.id,
           name: trimmed,
           avatar,
-          is_admin: true,
         })
         .select()
         .single();
