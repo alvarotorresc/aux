@@ -2,6 +2,28 @@ import type { APIRoute } from 'astro';
 
 const ODESLI_API = 'https://api.song.link/v1-alpha.1/links';
 
+/** Allowed music platform hostnames (mirrors the client-side whitelist in odesli.ts) */
+const ALLOWED_HOSTS = new Set([
+  'open.spotify.com',
+  'spotify.link',
+  'music.youtube.com',
+  'youtube.com',
+  'www.youtube.com',
+  'youtu.be',
+  'music.apple.com',
+  'itunes.apple.com',
+  'tidal.com',
+  'listen.tidal.com',
+  'deezer.com',
+  'www.deezer.com',
+  'deezer.page.link',
+  'soundcloud.com',
+  'www.soundcloud.com',
+  'song.link',
+  'album.link',
+  'odesli.co',
+]);
+
 /**
  * Server-side proxy for the Odesli API.
  * Avoids CORS issues since the browser calls our own origin.
@@ -13,6 +35,22 @@ export const GET: APIRoute = async ({ url }) => {
 
   if (!musicUrl) {
     return new Response(JSON.stringify({ error: 'Missing url parameter' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  // Server-side validation: only allow HTTPS URLs from known music platforms
+  try {
+    const parsed = new URL(musicUrl);
+    if (parsed.protocol !== 'https:' || !ALLOWED_HOSTS.has(parsed.hostname)) {
+      return new Response(JSON.stringify({ error: 'URL not from a supported music platform' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+  } catch {
+    return new Response(JSON.stringify({ error: 'Invalid URL' }), {
       status: 400,
       headers: { 'Content-Type': 'application/json' },
     });
