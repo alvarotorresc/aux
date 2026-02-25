@@ -1,0 +1,9 @@
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    # CSP: allow self + Supabase API + Odesli thumbnails (i.scdn.co, lh3, etc.)
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https://*.scdn.co https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com data:; connect-src 'self' https://*.supabase.co https://api.song.link; frame-ancestors 'none'"
