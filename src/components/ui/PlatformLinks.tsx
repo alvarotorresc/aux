@@ -135,8 +135,7 @@ export function PlatformLinks({ links }: PlatformLinksProps) {
           <a
             key={link.platform}
             href={link.url}
-            target="_blank"
-            rel="noopener noreferrer"
+            rel="noopener"
             className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-medium transition-opacity hover:opacity-80"
             style={{
               color: config.hex,
