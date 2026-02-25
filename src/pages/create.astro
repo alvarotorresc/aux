@@ -1,0 +1,17 @@
+---
+export const prerender = true;
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import { CreateGroup } from '../features/join/CreateGroup';
+import { t } from '../i18n';
+---
+
+<BaseLayout title={t('create.title', 'en')} locale="en">
+  <Navbar />
+  <main class="flex min-h-[calc(100vh-140px)] items-center justify-center px-5 py-12">
+    <CreateGroup client:load locale="en" />
+  </main>
+  <Footer locale="en" />
+</BaseLayout>
