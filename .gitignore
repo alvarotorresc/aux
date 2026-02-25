@@ -1,0 +1,29 @@
+# build output
+dist/
+
+# generated types
+.astro/
+
+# dependencies
+node_modules/
+
+# logs
+*.log
+
+# environment variables
+.env
+.env.production
+.env.local
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+
+# prototype deps
+prototype/node_modules/
+
+# Local Netlify folder
+.netlify
