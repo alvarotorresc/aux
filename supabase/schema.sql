@@ -7,17 +7,17 @@
 
 create table groups (
   id uuid default gen_random_uuid() primary key,
-  name text not null,
-  slug text not null unique,
-  songs_per_round int not null default 3,
+  name text not null check (char_length(name) <= 60),
+  slug text not null unique check (char_length(slug) <= 80 and slug ~ '^[a-z0-9][a-z0-9-]*[a-z0-9]$'),
+  songs_per_round int not null default 3 check (songs_per_round >= 1 and songs_per_round <= 20),
   created_at timestamptz default now()
 );
 
 create table members (
   id uuid default gen_random_uuid() primary key,
   group_id uuid references groups(id) on delete cascade not null,
-  name text not null,
-  avatar text not null default '🎵',
+  name text not null check (char_length(name) >= 1 and char_length(name) <= 40),
+  avatar text not null default '🎵' check (char_length(avatar) <= 10),
   is_admin boolean not null default false,
   created_at timestamptz default now(),
   unique(group_id, name)
@@ -37,13 +37,13 @@ create table songs (
   id uuid default gen_random_uuid() primary key,
   round_id uuid references rounds(id) on delete cascade not null,
   member_id uuid references members(id) on delete cascade not null,
-  title text not null,
-  artist text not null,
-  album text,
-  thumbnail_url text,
-  spotify_url text,
-  youtube_url text,
-  odesli_page_url text,
+  title text not null check (char_length(title) <= 300),
+  artist text not null check (char_length(artist) <= 300),
+  album text check (album is null or char_length(album) <= 300),
+  thumbnail_url text check (thumbnail_url is null or thumbnail_url ~ '^https://'),
+  spotify_url text check (spotify_url is null or spotify_url ~ '^https://'),
+  youtube_url text check (youtube_url is null or youtube_url ~ '^https://'),
+  odesli_page_url text check (odesli_page_url is null or odesli_page_url ~ '^https://'),
   created_at timestamptz default now()
 );
 
@@ -80,6 +80,17 @@ create index idx_votes_member_id on votes(member_id);
 
 -- =============================================================================
 -- Row Level Security (permissive — lab product, slug is the "key")
+--
+-- Applied hardening:
+--   - members_insert: with check (is_admin = false) — prevents privilege escalation
+--   - members_update: with check (is_admin = false) — prevents self-promotion to admin
+--   - songs/members columns: DB-level length + https-only constraints
+--
+-- Remaining open (acceptable for trusted friends):
+--   - groups_update: open (could restrict to admin member in future)
+--   - members_delete: open (could restrict to self or admin)
+--   - songs_delete: open (could restrict to song owner or admin)
+--   - votes_delete: open (could restrict to vote owner)
 -- =============================================================================
 
 alter table groups enable row level security;
@@ -93,10 +104,10 @@ create policy "groups_select" on groups for select to anon using (true);
 create policy "groups_insert" on groups for insert to anon with check (true);
 create policy "groups_update" on groups for update to anon using (true) with check (true);
 
--- Members: anon can read/write all
+-- Members: anon can read all, insert non-admin members only, update own non-admin row, delete own row
 create policy "members_select" on members for select to anon using (true);
-create policy "members_insert" on members for insert to anon with check (true);
-create policy "members_update" on members for update to anon using (true) with check (true);
+create policy "members_insert" on members for insert to anon with check (is_admin = false);
+create policy "members_update" on members for update to anon using (true) with check (is_admin = false);
 create policy "members_delete" on members for delete to anon using (true);
 
 -- Rounds: anon can read/write all

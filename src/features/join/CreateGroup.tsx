@@ -32,13 +32,19 @@ export function CreateGroup({ locale }: CreateGroupProps) {
     setError('');
 
     const trimmed = name.trim();
-    if (!trimmed) {
+    if (!trimmed || trimmed.length < 2) {
+      setError(t('create.error.empty', locale));
+      return;
+    }
+
+    // maxLength on the input is 60 — enforce the same here defensively
+    if (trimmed.length > 60) {
       setError(t('create.error.empty', locale));
       return;
     }
 
     const slug = slugify(trimmed);
-    if (!slug) {
+    if (!slug || slug.length < 2) {
       setError(t('create.error.empty', locale));
       return;
     }
@@ -86,8 +92,9 @@ export function CreateGroup({ locale }: CreateGroupProps) {
       const prefix = locale === 'es' ? '/es' : '';
       window.location.href = `${prefix}/g/${slug}`;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
-      setError(message);
+      // Do not surface raw Supabase/DB error messages to the user
+      console.error('[CreateGroup] unexpected error:', err);
+      setError(t('create.error.generic', locale));
       setIsSubmitting(false);
     }
   }

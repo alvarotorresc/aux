@@ -16,10 +16,22 @@ interface SongCardProps {
  * Card for a single song: album art on the left, info + platform links + rating on the right.
  * If the song belongs to the current user, shows "Your track" instead of interactive stars.
  */
+/** Only allow https thumbnails to be rendered; silently drop anything else. */
+function safeThumbUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' ? url : null;
+  } catch {
+    return null;
+  }
+}
+
 export function SongCard({ song, memberId, members, onRate, locale }: SongCardProps) {
   const isOwn = song.member_id === memberId;
   const addedByMember = members.find((m) => m.id === song.member_id);
   const addedByName = addedByMember?.name ?? '?';
+  const thumbnailUrl = safeThumbUrl(song.thumbnail_url);
 
   // Find the current user's existing vote for this song
   const myVote = memberId ? song.votes.find((v) => v.member_id === memberId) : undefined;
@@ -28,9 +40,9 @@ export function SongCard({ song, memberId, members, onRate, locale }: SongCardPr
   return (
     <div className="flex gap-4 rounded-xl border border-border bg-bg-card p-4">
       {/* Album artwork */}
-      {song.thumbnail_url ? (
+      {thumbnailUrl ? (
         <img
-          src={song.thumbnail_url}
+          src={thumbnailUrl}
           alt={song.album ? `${song.album} cover` : `${song.title} cover`}
           className="h-20 w-20 shrink-0 rounded-lg object-cover"
           loading="lazy"

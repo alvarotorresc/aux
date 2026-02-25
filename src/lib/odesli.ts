@@ -2,6 +2,28 @@
 
 const ODESLI_API = 'https://api.song.link/v1-alpha.1/links';
 
+/** Allowed music platform hostnames (and their common short-link domains) */
+const ALLOWED_HOSTS = new Set([
+  'open.spotify.com',
+  'spotify.link',
+  'music.youtube.com',
+  'youtube.com',
+  'www.youtube.com',
+  'youtu.be',
+  'music.apple.com',
+  'itunes.apple.com',
+  'tidal.com',
+  'listen.tidal.com',
+  'deezer.com',
+  'www.deezer.com',
+  'deezer.page.link',
+  'soundcloud.com',
+  'www.soundcloud.com',
+  'song.link',
+  'album.link',
+  'odesli.co',
+]);
+
 interface OdesliEntity {
   id: string;
   type: string;
@@ -36,6 +58,20 @@ export interface ResolvedSong {
 }
 
 /**
+ * Returns the URL string only if it parses as an https URL; otherwise null.
+ * Used to sanitise URLs received from the Odesli API before storing them.
+ */
+function safeHttpsUrl(raw: string | undefined | null): string | null {
+  if (!raw) return null;
+  try {
+    const parsed = new URL(raw);
+    return parsed.protocol === 'https:' ? raw : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Resolves a music URL (Spotify, YouTube, Apple Music, etc.) to cross-platform data
  * via the Odesli (song.link) API.
  *
@@ -55,8 +91,16 @@ export async function resolveSongLink(url: string): Promise<ResolvedSong> {
     throw new Error('Invalid URL format');
   }
 
-  if (!parsed.protocol.startsWith('http')) {
-    throw new Error('URL must start with http or https');
+  // Only allow https. http short-links (e.g. spotify.link) redirect to https anyway,
+  // so requiring https here avoids leaking the request over plain HTTP.
+  if (parsed.protocol !== 'https:') {
+    throw new Error('URL must use HTTPS');
+  }
+
+  if (!ALLOWED_HOSTS.has(parsed.hostname)) {
+    throw new Error(
+      'URL must be from a supported music platform (Spotify, YouTube, Apple Music, Tidal, Deezer, SoundCloud)',
+    );
   }
 
   const endpoint = `${ODESLI_API}?url=${encodeURIComponent(trimmed)}`;
@@ -92,13 +136,23 @@ export async function resolveSongLink(url: string): Promise<ResolvedSong> {
   const spotifyLink = data.linksByPlatform.spotify;
   const youtubeLink = data.linksByPlatform.youtube ?? data.linksByPlatform.youtubeMusic;
 
+  // Sanitise all URLs coming from the external API before they are stored in DB or rendered.
+  const thumbnailUrl = safeHttpsUrl(primaryEntity.thumbnailUrl);
+  const spotifyUrl = safeHttpsUrl(spotifyLink?.url);
+  const youtubeUrl = safeHttpsUrl(youtubeLink?.url);
+  const pageUrl = safeHttpsUrl(data.pageUrl);
+
+  if (!pageUrl) {
+    throw new Error('Invalid page URL returned by song resolution service.');
+  }
+
   return {
-    title: primaryEntity.title ?? 'Unknown Title',
-    artist: primaryEntity.artistName ?? 'Unknown Artist',
+    title: (primaryEntity.title ?? 'Unknown Title').slice(0, 300),
+    artist: (primaryEntity.artistName ?? 'Unknown Artist').slice(0, 300),
     album: null, // Odesli entity does not reliably expose album name
-    thumbnailUrl: primaryEntity.thumbnailUrl ?? null,
-    spotifyUrl: spotifyLink?.url ?? null,
-    youtubeUrl: youtubeLink?.url ?? null,
-    pageUrl: data.pageUrl,
+    thumbnailUrl,
+    spotifyUrl,
+    youtubeUrl,
+    pageUrl,
   };
 }

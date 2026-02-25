@@ -24,7 +24,14 @@ export function JoinGroup({ slug, groupId, locale }: JoinGroupProps) {
     setError('');
 
     const trimmed = name.trim();
-    if (!trimmed) {
+    if (!trimmed || trimmed.length < 2) {
+      setError(t('join.error.empty', locale));
+      return;
+    }
+
+    // maxLength on the input is 40 — enforce the same here defensively
+    if (trimmed.length > 40) {
+      setError(t('join.error.tooLong', locale));
       return;
     }
 
@@ -43,7 +50,8 @@ export function JoinGroup({ slug, groupId, locale }: JoinGroupProps) {
         .single();
 
       if (insertError) {
-        // Unique constraint on (group_id, name) — re-use existing member
+        // Unique constraint on (group_id, name) — re-use existing member.
+        // NOTE: this lookup is intentional UX (Tricount-style: same name = same person).
         if (insertError.code === '23505') {
           const { data: existing, error: selectError } = await supabase
             .from('members')
@@ -53,7 +61,10 @@ export function JoinGroup({ slug, groupId, locale }: JoinGroupProps) {
             .single();
 
           if (selectError || !existing) {
-            throw selectError ?? new Error('Failed to find existing member');
+            // Do not reveal whether the member exists; show a generic message
+            setError(t('join.error.generic', locale));
+            setIsSubmitting(false);
+            return;
           }
 
           setMemberId(slug, existing.id);
@@ -67,8 +78,9 @@ export function JoinGroup({ slug, groupId, locale }: JoinGroupProps) {
       setMemberId(slug, member.id);
       window.location.reload();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
-      setError(message);
+      // Do not surface raw Supabase/DB error messages to the user
+      console.error('[JoinGroup] unexpected error:', err);
+      setError(t('join.error.generic', locale));
       setIsSubmitting(false);
     }
   }

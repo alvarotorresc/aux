@@ -4,18 +4,34 @@ interface PlatformLinksProps {
 }
 
 /**
+ * Returns the URL only if it is a safe https link; otherwise null.
+ * Prevents javascript: or data: URLs from being rendered as hrefs.
+ */
+function safeExternalUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' ? url : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * External links to Spotify and YouTube with platform-colored translucent backgrounds.
- * Only renders links for platforms that have a URL.
+ * Only renders links for platforms that have a valid https URL.
  */
 export function PlatformLinks({ spotifyUrl, youtubeUrl }: PlatformLinksProps) {
-  const hasAny = spotifyUrl || youtubeUrl;
+  const safeSpotify = safeExternalUrl(spotifyUrl);
+  const safeYoutube = safeExternalUrl(youtubeUrl);
+  const hasAny = safeSpotify || safeYoutube;
   if (!hasAny) return null;
 
   return (
     <div className="flex gap-2">
-      {spotifyUrl && (
+      {safeSpotify && (
         <a
-          href={spotifyUrl}
+          href={safeSpotify}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 rounded-md border border-spotify/20 bg-spotify/10 px-3 py-1.5 text-xs font-medium text-spotify transition-opacity hover:opacity-80"
@@ -26,9 +42,9 @@ export function PlatformLinks({ spotifyUrl, youtubeUrl }: PlatformLinksProps) {
           Spotify
         </a>
       )}
-      {youtubeUrl && (
+      {safeYoutube && (
         <a
-          href={youtubeUrl}
+          href={safeYoutube}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 rounded-md border border-youtube/20 bg-youtube/10 px-3 py-1.5 text-xs font-medium text-youtube transition-opacity hover:opacity-80"

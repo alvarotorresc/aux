@@ -169,6 +169,12 @@ export function useGroup(groupId: string, memberId: string | null): UseGroupResu
         throw new Error('Cannot vote: not a member');
       }
 
+      // Mirror the DB check constraint: rating numeric(2,1) between 0 and 5
+      const roundedRating = Math.round(rating * 2) / 2; // snap to 0.5 steps
+      if (roundedRating < 0 || roundedRating > 5) {
+        throw new Error('Rating must be between 0 and 5');
+      }
+
       // Optimistic update
       setSongs((prev) =>
         prev.map((song) => {
@@ -180,7 +186,7 @@ export function useGroup(groupId: string, memberId: string | null): UseGroupResu
           if (existingVoteIndex >= 0) {
             // Update existing vote
             updatedVotes = song.votes.map((v, i) =>
-              i === existingVoteIndex ? { ...v, rating } : v,
+              i === existingVoteIndex ? { ...v, rating: roundedRating } : v,
             );
           } else {
             // Add new vote (optimistic ID)
@@ -188,7 +194,7 @@ export function useGroup(groupId: string, memberId: string | null): UseGroupResu
               id: `optimistic-${Date.now()}`,
               song_id: songId,
               member_id: memberId,
-              rating,
+              rating: roundedRating,
               created_at: new Date().toISOString(),
             };
             updatedVotes = [...song.votes, optimisticVote];
@@ -207,7 +213,7 @@ export function useGroup(groupId: string, memberId: string | null): UseGroupResu
         {
           song_id: songId,
           member_id: memberId,
-          rating,
+          rating: roundedRating,
         },
         { onConflict: 'song_id,member_id' },
       );
