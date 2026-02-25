@@ -18,13 +18,15 @@
   "dependencies": {
     "@astrojs/netlify": "^6.6.4",
     "@astrojs/react": "^4.4.2",
+    "@supabase/supabase-js": "^2.97.0",
     "@tailwindcss/vite": "^4.2.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "astro": "^5.17.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "tailwindcss": "^4.2.1"
+    "tailwindcss": "^4.2.1",
+    "zod": "^4.3.6"
   },
   "engines": {
     "node": ">=20"
@@ -39,7 +41,6 @@
     "prettier": "^3.8.1",
     "prettier-plugin-astro": "^0.14.1",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.18",
-    "zod": "^4.3.6"
+    "vitest": "^4.0.18"
   }
 }
