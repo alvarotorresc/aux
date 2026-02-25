@@ -1,0 +1,33 @@
+---
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import Footer from '../../../../components/Footer.astro';
+import { LeaderboardView } from '../../../../features/leaderboard/LeaderboardView';
+import { supabase } from '../../../../lib/supabase';
+import { t } from '../../../../i18n';
+import type { Group } from '../../../../lib/types';
+
+const { slug } = Astro.params;
+
+if (!slug) {
+  return Astro.redirect('/es');
+}
+
+const { data: group, error: groupError } = await supabase
+  .from('groups')
+  .select('*')
+  .eq('slug', slug)
+  .maybeSingle();
+
+if (groupError || !group) {
+  return Astro.redirect('/404');
+}
+
+const typedGroup = group as Group;
+---
+
+<BaseLayout title={`${t('leaderboard.title', 'es')} — ${typedGroup.name}`} locale="es">
+  <main>
+    <LeaderboardView client:load group={typedGroup} locale="es" />
+  </main>
+  <Footer locale="es" />
+</BaseLayout>

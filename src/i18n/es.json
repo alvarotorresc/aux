@@ -55,6 +55,15 @@
   "group.roundDates": "fechas",
   "group.songs_count": "canciones",
   "group.ranking.title": "Ranking de ronda",
+  "leaderboard.title": "Clasificacion",
+  "leaderboard.allTime": "Clasificacion historica",
+  "leaderboard.pastRounds": "Rondas pasadas",
+  "leaderboard.noPastRounds": "Aun no hay rondas pasadas",
+  "leaderboard.songs": "canciones",
+  "leaderboard.avg": "media",
+  "leaderboard.wins": "victorias",
+  "leaderboard.pts": "pts",
+  "leaderboard.fullLink": "Clasificacion completa",
   "footer.madeWith": "Hecho con",
   "footer.by": "por"
 }

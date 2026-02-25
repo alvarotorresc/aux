@@ -55,6 +55,15 @@
   "group.roundDates": "dates",
   "group.songs_count": "songs",
   "group.ranking.title": "Round ranking",
+  "leaderboard.title": "Leaderboard",
+  "leaderboard.allTime": "All-time standings",
+  "leaderboard.pastRounds": "Past rounds",
+  "leaderboard.noPastRounds": "No past rounds yet",
+  "leaderboard.songs": "songs",
+  "leaderboard.avg": "avg",
+  "leaderboard.wins": "wins",
+  "leaderboard.pts": "pts",
+  "leaderboard.fullLink": "Full leaderboard",
   "footer.madeWith": "Made with",
   "footer.by": "by"
 }

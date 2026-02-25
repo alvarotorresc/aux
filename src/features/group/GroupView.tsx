@@ -193,7 +193,30 @@ function GroupContent({
           )}
         </div>
       ) : (
-        <MiniRanking songs={songs} members={members} roundNumber={round.number} locale={locale} />
+        <>
+          <MiniRanking songs={songs} members={members} roundNumber={round.number} locale={locale} />
+          <div className="px-5 pb-5">
+            <a
+              href={`${locale === 'es' ? '/es' : ''}/g/${group.slug}/leaderboard`}
+              className="flex items-center justify-center gap-1.5 rounded-lg border border-border bg-bg-card px-4 py-3 text-sm font-medium text-primary transition-colors hover:bg-bg-input"
+            >
+              {t('leaderboard.fullLink', locale)}
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="m9 18 6-6-6-6" />
+              </svg>
+            </a>
+          </div>
+        </>
       )}
     </div>
   );
