@@ -57,19 +57,34 @@ function ShareButton({ slug, locale }: { slug: string; locale: Locale }) {
 function GroupNav({
   group,
   memberCount,
+  currentMember,
   locale,
 }: {
   group: Group;
   memberCount: number;
+  currentMember?: Member;
   locale: Locale;
 }) {
   return (
     <nav className="flex items-center justify-between border-b border-border bg-bg px-5 py-4">
-      <div>
-        <h1 className="text-lg font-bold leading-tight text-text">{group.name}</h1>
-        <p className="text-xs text-text-tertiary">
-          {memberCount} {t('group.members', locale).toLowerCase()}
-        </p>
+      <div className="flex items-center gap-3">
+        <div>
+          <h1 className="text-lg font-bold leading-tight text-text">{group.name}</h1>
+          <div className="flex items-center gap-2 text-xs text-text-tertiary">
+            <span>
+              {memberCount} {t('group.members', locale).toLowerCase()}
+            </span>
+            {currentMember && (
+              <>
+                <span aria-hidden="true">·</span>
+                <span className="inline-flex items-center gap-1">
+                  <span>{currentMember.avatar}</span>
+                  <span className="text-text-secondary">{currentMember.name}</span>
+                </span>
+              </>
+            )}
+          </div>
+        </div>
       </div>
       <ShareButton slug={group.slug} locale={locale} />
     </nav>
@@ -144,6 +159,7 @@ function GroupContent({
   locale: Locale;
 }) {
   const [activeTab, setActiveTab] = useState<Tab>('songs');
+  const currentMember = members.find((m) => m.id === memberId);
   const { round, songs, isLoading, error, addSong, voteSong, refetch } = useGroup(
     group.id,
     memberId,
@@ -153,7 +169,12 @@ function GroupContent({
   if (isLoading) {
     return (
       <>
-        <GroupNav group={group} memberCount={members.length} locale={locale} />
+        <GroupNav
+          group={group}
+          memberCount={members.length}
+          currentMember={currentMember}
+          locale={locale}
+        />
         <LoadingSpinner />
       </>
     );
@@ -162,7 +183,12 @@ function GroupContent({
   if (error || !round) {
     return (
       <>
-        <GroupNav group={group} memberCount={members.length} locale={locale} />
+        <GroupNav
+          group={group}
+          memberCount={members.length}
+          currentMember={currentMember}
+          locale={locale}
+        />
         <ErrorState message={error ?? 'Failed to load round'} onRetry={refetch} />
       </>
     );
@@ -170,7 +196,12 @@ function GroupContent({
 
   return (
     <div className="flex min-h-screen flex-col bg-bg">
-      <GroupNav group={group} memberCount={members.length} locale={locale} />
+      <GroupNav
+        group={group}
+        memberCount={members.length}
+        currentMember={currentMember}
+        locale={locale}
+      />
       <RoundInfo round={round} songCount={songs.length} songsPerRound={group.songs_per_round} />
       <TabSwitcher active={activeTab} onChange={setActiveTab} locale={locale} />
 
