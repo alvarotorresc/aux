@@ -92,33 +92,60 @@ export function useLeaderboard(groupId: string): UseLeaderboardResult {
     setError(null);
 
     try {
-      // Fetch all data in parallel
-      const [membersRes, roundsRes, songsRes, votesRes] = await Promise.all([
+      // Step 1: fetch members and rounds (scoped to this group)
+      const [membersRes, roundsRes] = await Promise.all([
         supabase.from('members').select('*').eq('group_id', groupId),
         supabase
           .from('rounds')
           .select('*')
           .eq('group_id', groupId)
           .order('number', { ascending: false }),
-        supabase.from('songs').select('*'),
-        supabase.from('votes').select('*'),
       ]);
 
       if (membersRes.error) throw new Error(`Failed to fetch members: ${membersRes.error.message}`);
       if (roundsRes.error) throw new Error(`Failed to fetch rounds: ${roundsRes.error.message}`);
-      if (songsRes.error) throw new Error(`Failed to fetch songs: ${songsRes.error.message}`);
-      if (votesRes.error) throw new Error(`Failed to fetch votes: ${votesRes.error.message}`);
 
       const allMembers = (membersRes.data ?? []) as Member[];
       const allRounds = (roundsRes.data ?? []) as Round[];
-      const allSongs = (songsRes.data ?? []) as Song[];
-      const allVotes = (votesRes.data ?? []) as Vote[];
 
-      // Filter songs to only those in rounds belonging to this group
-      const roundIds = new Set(allRounds.map((r) => r.id));
-      const groupSongs = allSongs.filter((s) => roundIds.has(s.round_id));
-      const groupSongIds = new Set(groupSongs.map((s) => s.id));
-      const groupVotes = allVotes.filter((v) => groupSongIds.has(v.song_id));
+      // Step 2: fetch songs scoped to this group's rounds, then votes scoped to those songs
+      const roundIds = allRounds.map((r) => r.id);
+
+      if (roundIds.length === 0) {
+        if (!mountedRef.current) return;
+        setMembers(
+          allMembers.map((m) => ({
+            ...m,
+            totalScore: 0,
+            songsAdded: 0,
+            avgReceived: 0,
+            roundsWon: 0,
+          })),
+        );
+        setPastRounds([]);
+        return;
+      }
+
+      const { data: songsData, error: songsError } = await supabase
+        .from('songs')
+        .select('*')
+        .in('round_id', roundIds);
+
+      if (songsError) throw new Error(`Failed to fetch songs: ${songsError.message}`);
+
+      const groupSongs = (songsData ?? []) as Song[];
+      const groupSongIds = groupSongs.map((s) => s.id);
+
+      let groupVotes: Vote[] = [];
+      if (groupSongIds.length > 0) {
+        const { data: votesData, error: votesError } = await supabase
+          .from('votes')
+          .select('*')
+          .in('song_id', groupSongIds);
+
+        if (votesError) throw new Error(`Failed to fetch votes: ${votesError.message}`);
+        groupVotes = (votesData ?? []) as Vote[];
+      }
 
       // Determine current round (most recent by number)
       const currentRound = allRounds.length > 0 ? allRounds[0] : null;
