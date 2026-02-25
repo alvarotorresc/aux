@@ -35,9 +35,12 @@ const { locale = 'en' } = Astro.props;
   </p>
 
   {/* CTA */}
-  <Button size="lg">
+  <a
+    href={locale === 'es' ? '/es/create' : '/create'}
+    class="inline-flex h-12 items-center justify-center rounded-lg bg-primary px-8 text-base font-semibold text-white transition-colors hover:bg-primary/90"
+  >
     {t('hero.cta', locale)}
-  </Button>
+  </a>
 
   {/* Join link */}
   <p class="mt-4 text-sm text-text-tertiary">
