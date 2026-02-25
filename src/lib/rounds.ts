@@ -77,6 +77,21 @@ export async function ensureCurrentRound(groupId: string): Promise<Round> {
     .single();
 
   if (insertError) {
+    // Handle race condition: another client created the round simultaneously
+    if (insertError.code === '23505') {
+      const { data: reFetched, error: reFetchError } = await supabase
+        .from('rounds')
+        .select('*')
+        .eq('group_id', groupId)
+        .eq('starts_at', start.toISOString())
+        .eq('ends_at', end.toISOString())
+        .maybeSingle();
+
+      if (reFetchError || !reFetched) {
+        throw new Error(`Failed to retrieve round after conflict: ${reFetchError?.message}`);
+      }
+      return reFetched as Round;
+    }
     throw new Error(`Failed to create round: ${insertError.message}`);
   }
 
