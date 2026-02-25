@@ -202,7 +202,11 @@ function GroupContent({
         currentMember={currentMember}
         locale={locale}
       />
-      <RoundInfo round={round} songCount={songs.length} songsPerRound={group.songs_per_round} />
+      <RoundInfo
+        round={round}
+        songCount={songs.filter((s) => s.member_id === memberId).length}
+        songsPerRound={group.songs_per_round}
+      />
       <TabSwitcher active={activeTab} onChange={setActiveTab} locale={locale} />
 
       {activeTab === 'songs' ? (
