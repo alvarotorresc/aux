@@ -11,6 +11,17 @@ interface MiniRankingProps {
 
 const MEDALS = ['\u{1F947}', '\u{1F948}', '\u{1F949}'] as const; // gold, silver, bronze
 
+/** Only allow https thumbnails to be rendered; silently drop anything else. */
+function safeThumbUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' ? url : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Ranking of songs sorted by average rating, with medals for top 3.
  */
@@ -28,10 +39,11 @@ export function MiniRanking({ songs, members, roundNumber, locale }: MiniRanking
       </h3>
 
       {sorted.length === 0 ? (
-        <p className="text-sm text-text-secondary">No songs yet</p>
+        <p className="text-sm text-text-secondary">{t('group.noSongsYet', locale)}</p>
       ) : (
         sorted.map((song, i) => {
           const isFirst = i === 0 && song.totalVotes > 0;
+          const thumbnailUrl = safeThumbUrl(song.thumbnail_url);
           return (
             <div
               key={song.id}
@@ -49,9 +61,9 @@ export function MiniRanking({ songs, members, roundNumber, locale }: MiniRanking
               </span>
 
               {/* Thumbnail */}
-              {song.thumbnail_url ? (
+              {thumbnailUrl ? (
                 <img
-                  src={song.thumbnail_url}
+                  src={thumbnailUrl}
                   alt=""
                   className="h-10 w-10 rounded-md object-cover"
                   loading="lazy"
@@ -77,7 +89,9 @@ export function MiniRanking({ songs, members, roundNumber, locale }: MiniRanking
               {/* Song info */}
               <div className="flex min-w-0 flex-1 flex-col">
                 <p className="truncate text-sm font-medium text-text">{song.title}</p>
-                <p className="text-xs text-text-tertiary">by {getMemberName(song.member_id)}</p>
+                <p className="text-xs text-text-tertiary">
+                  {t('ranking.by', locale)} {getMemberName(song.member_id)}
+                </p>
               </div>
 
               {/* Average rating */}

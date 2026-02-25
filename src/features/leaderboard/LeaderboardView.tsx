@@ -105,12 +105,20 @@ function LoadingSpinner() {
   );
 }
 
-function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+function ErrorState({
+  message,
+  onRetry,
+  locale,
+}: {
+  message: string;
+  onRetry: () => void;
+  locale: Locale;
+}) {
   return (
     <div className="flex min-h-[30vh] flex-col items-center justify-center gap-4 px-5">
       <p className="text-sm text-error">{message}</p>
       <Button variant="secondary" size="sm" onClick={onRetry}>
-        Retry
+        {t('group.retry', locale)}
       </Button>
     </div>
   );
@@ -132,7 +140,7 @@ export function LeaderboardView({ group, locale }: LeaderboardViewProps) {
       {isLoading ? (
         <LoadingSpinner />
       ) : error ? (
-        <ErrorState message={error} onRetry={() => window.location.reload()} />
+        <ErrorState message={error} onRetry={() => window.location.reload()} locale={locale} />
       ) : (
         <>
           <Podium members={members} locale={locale} />
