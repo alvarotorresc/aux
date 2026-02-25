@@ -25,7 +25,8 @@ function ShareButton({ slug, locale }: { slug: string; locale: Locale }) {
   const [copied, setCopied] = useState(false);
 
   async function handleShare() {
-    const url = `${window.location.origin}/g/${slug}`;
+    const prefix = locale === 'es' ? '/es' : '';
+    const url = `${window.location.origin}${prefix}/g/${slug}`;
     if (navigator.share) {
       navigator.share({ title: 'Aux', url });
     } else {
@@ -159,12 +160,20 @@ function LoadingSpinner() {
   );
 }
 
-function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+function ErrorState({
+  message,
+  onRetry,
+  locale,
+}: {
+  message: string;
+  onRetry: () => void;
+  locale: Locale;
+}) {
   return (
     <div className="flex min-h-[30vh] flex-col items-center justify-center gap-4 px-5">
       <p className="text-sm text-error">{message}</p>
       <Button variant="secondary" size="sm" onClick={onRetry}>
-        Retry
+        {t('group.retry', locale)}
       </Button>
     </div>
   );
@@ -174,22 +183,23 @@ function ErrorState({ message, onRetry }: { message: string; onRetry: () => void
 
 function GroupContent({
   group,
-  members,
+  initialMembers,
   memberId,
   locale,
 }: {
   group: Group;
-  members: Member[];
+  initialMembers: Member[];
   memberId: string;
   locale: Locale;
 }) {
   const [activeTab, setActiveTab] = useState<Tab>('songs');
-  const currentMember = members.find((m) => m.id === memberId);
-  const { round, songs, isLoading, error, addSong, voteSong, refetch } = useGroup(
+  const { round, songs, members, isLoading, error, addSong, voteSong, refetch } = useGroup(
     group.id,
     memberId,
     group.songs_per_round,
+    initialMembers,
   );
+  const currentMember = members.find((m) => m.id === memberId);
 
   if (isLoading) {
     return (
@@ -214,7 +224,11 @@ function GroupContent({
           currentMember={currentMember}
           locale={locale}
         />
-        <ErrorState message={error ?? 'Failed to load round'} onRetry={refetch} />
+        <ErrorState
+          message={error ?? t('group.failedToLoad', locale)}
+          onRetry={refetch}
+          locale={locale}
+        />
       </>
     );
   }
@@ -231,6 +245,7 @@ function GroupContent({
         round={round}
         songCount={songs.filter((s) => s.member_id === memberId).length}
         songsPerRound={group.songs_per_round}
+        locale={locale}
       />
       <TabSwitcher active={activeTab} onChange={setActiveTab} locale={locale} />
 
@@ -251,7 +266,7 @@ function GroupContent({
           ))}
           {songs.length === 0 && (
             <p className="py-8 text-center text-sm text-text-secondary">
-              No songs yet. Be the first to add one!
+              {t('group.noSongsYet', locale)} {t('group.noSongsDesc', locale)}
             </p>
           )}
         </div>
@@ -299,10 +314,12 @@ export function GroupView({ group, members, locale }: GroupViewProps) {
   if (!member) {
     return (
       <div className="flex min-h-[calc(100vh-140px)] items-center justify-center px-5 py-12">
-        <JoinGroup slug={group.slug} groupId={group.id} locale={locale} />
+        <JoinGroup slug={group.slug} groupId={group.id} members={members} locale={locale} />
       </div>
     );
   }
 
-  return <GroupContent group={group} members={members} memberId={member.id} locale={locale} />;
+  return (
+    <GroupContent group={group} initialMembers={members} memberId={member.id} locale={locale} />
+  );
 }

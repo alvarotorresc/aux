@@ -2,11 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { ensureCurrentRound } from '../../lib/rounds';
 import { resolveSongLink } from '../../lib/odesli';
-import type { Round, Song, Vote, SongWithVotes } from '../../lib/types';
+import type { Member, Round, Song, Vote, SongWithVotes } from '../../lib/types';
 
 interface UseGroupResult {
   round: Round | null;
   songs: SongWithVotes[];
+  members: Member[];
   isLoading: boolean;
   error: string | null;
   addSong: (url: string) => Promise<void>;
@@ -35,9 +36,11 @@ export function useGroup(
   groupId: string,
   memberId: string | null,
   songsPerRound: number = 5,
+  initialMembers: Member[] = [],
 ): UseGroupResult {
   const [round, setRound] = useState<Round | null>(null);
   const [songs, setSongs] = useState<SongWithVotes[]>([]);
+  const [members, setMembers] = useState<Member[]>(initialMembers);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -112,18 +115,28 @@ export function useGroup(
     initialize();
   }, [initialize]);
 
-  /** Refetch songs for the current round */
+  /** Refetch songs and members for the current round */
   const refetch = useCallback(async () => {
     if (!round) return;
     try {
-      const enrichedSongs = await fetchSongsForRound(round.id);
+      const [enrichedSongs, membersRes] = await Promise.all([
+        fetchSongsForRound(round.id),
+        supabase
+          .from('members')
+          .select('*')
+          .eq('group_id', groupId)
+          .order('created_at', { ascending: true }),
+      ]);
       if (mountedRef.current) {
         setSongs(enrichedSongs);
+        if (!membersRes.error && membersRes.data) {
+          setMembers(membersRes.data as Member[]);
+        }
       }
     } catch {
       // Silent refetch failure — user already has data displayed
     }
-  }, [round, fetchSongsForRound]);
+  }, [round, groupId, fetchSongsForRound]);
 
   // Poll for updates every 15 seconds
   useEffect(() => {
@@ -132,6 +145,10 @@ export function useGroup(
     return () => clearInterval(interval);
   }, [round, refetch]);
 
+  // Keep a ref to songs so addSong always reads the latest state
+  const songsRef = useRef(songs);
+  songsRef.current = songs;
+
   /** Add a new song by resolving the URL via Odesli and inserting into Supabase */
   const addSong = useCallback(
     async (url: string) => {
@@ -139,8 +156,8 @@ export function useGroup(
         throw new Error('Cannot add song: no active round or member');
       }
 
-      // Check song limit per round
-      const mySongsThisRound = songs.filter(
+      // Check song limit per round (use ref to avoid stale closure)
+      const mySongsThisRound = songsRef.current.filter(
         (s) => s.member_id === memberId && s.round_id === round.id,
       );
       if (mySongsThisRound.length >= songsPerRound) {
@@ -248,5 +265,5 @@ export function useGroup(
     [memberId, refetch],
   );
 
-  return { round, songs, isLoading, error, addSong, voteSong, refetch };
+  return { round, songs, members, isLoading, error, addSong, voteSong, refetch };
 }
