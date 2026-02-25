@@ -111,7 +111,7 @@ describe('resolveSongLink', () => {
 
     expect(mockFetch).toHaveBeenCalledOnce();
     const calledUrl = mockFetch.mock.calls[0][0] as string;
-    expect(calledUrl).toContain('https://api.song.link/v1-alpha.1/links');
+    expect(calledUrl).toContain('/api/resolve');
     expect(calledUrl).toContain(encodeURIComponent(spotifyUrl));
   });
 

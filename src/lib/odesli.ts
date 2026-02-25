@@ -1,6 +1,7 @@
 /** Odesli (song.link) API wrapper — resolves music URLs to cross-platform data */
 
-const ODESLI_API = 'https://api.song.link/v1-alpha.1/links';
+/** Use our own server-side proxy to avoid CORS issues with the Odesli API */
+const RESOLVE_API = '/api/resolve';
 
 /** Allowed music platform hostnames (and their common short-link domains) */
 const ALLOWED_HOSTS = new Set([
@@ -103,7 +104,7 @@ export async function resolveSongLink(url: string): Promise<ResolvedSong> {
     );
   }
 
-  const endpoint = `${ODESLI_API}?url=${encodeURIComponent(trimmed)}`;
+  const endpoint = `${RESOLVE_API}?url=${encodeURIComponent(trimmed)}`;
 
   let response: Response;
   try {
