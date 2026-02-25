@@ -47,7 +47,7 @@ function ShareButton({ slug, locale }: { slug: string; locale: Locale }) {
           strokeWidth="1.5"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="mr-1.5"
+          className="sm:mr-1.5"
           aria-hidden="true"
         >
           <polyline points="20 6 9 17 4 12" />
@@ -62,7 +62,7 @@ function ShareButton({ slug, locale }: { slug: string; locale: Locale }) {
           strokeWidth="1.5"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="mr-1.5"
+          className="sm:mr-1.5"
           aria-hidden="true"
         >
           <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
@@ -70,7 +70,9 @@ function ShareButton({ slug, locale }: { slug: string; locale: Locale }) {
           <line x1="12" x2="12" y1="2" y2="15" />
         </svg>
       )}
-      {copied ? t('group.copied', locale) : t('group.share', locale)}
+      <span className="hidden sm:inline">
+        {copied ? t('group.copied', locale) : t('group.share', locale)}
+      </span>
     </Button>
   );
 }
@@ -87,10 +89,12 @@ function GroupNav({
   locale: Locale;
 }) {
   return (
-    <nav className="flex items-center justify-between border-b border-border bg-bg px-5 py-4">
-      <div className="flex items-center gap-3">
-        <div>
-          <h1 className="text-lg font-bold leading-tight text-text">{group.name}</h1>
+    <nav className="flex items-center justify-between gap-3 border-b border-border bg-bg px-4 py-3 sm:px-5 sm:py-4">
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="min-w-0">
+          <h1 className="truncate text-base font-bold leading-tight text-text sm:text-lg">
+            {group.name}
+          </h1>
           <div className="flex items-center gap-2 text-xs text-text-tertiary">
             <span>
               {memberCount} {t('group.members', locale).toLowerCase()}

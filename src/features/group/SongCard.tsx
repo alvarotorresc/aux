@@ -38,17 +38,17 @@ export function SongCard({ song, memberId, members, onRate, locale }: SongCardPr
   const myRating = myVote?.rating ?? null;
 
   return (
-    <div className="flex gap-4 rounded-xl border border-border bg-bg-card p-4">
+    <div className="flex gap-3 rounded-xl border border-border bg-bg-card p-3 sm:gap-4 sm:p-4">
       {/* Album artwork */}
       {thumbnailUrl ? (
         <img
           src={thumbnailUrl}
           alt={song.album ? `${song.album} cover` : `${song.title} cover`}
-          className="h-20 w-20 shrink-0 rounded-lg object-cover"
+          className="h-16 w-16 shrink-0 rounded-lg object-cover sm:h-20 sm:w-20"
           loading="lazy"
         />
       ) : (
-        <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg bg-bg-input text-2xl text-text-tertiary">
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-bg-input text-2xl text-text-tertiary sm:h-20 sm:w-20">
           <svg
             width="28"
             height="28"
