@@ -2,10 +2,8 @@ import { useState } from 'react';
 import type { Locale } from '../../../site.config';
 import { t } from '../../i18n';
 import { supabase } from '../../lib/supabase';
-import { setMemberId } from '../../lib/storage';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
-import { EmojiPicker, MUSIC_EMOJIS } from './EmojiPicker';
 
 interface CreateGroupProps {
   locale: Locale;
@@ -23,7 +21,6 @@ function slugify(name: string): string {
 
 export function CreateGroup({ locale }: CreateGroupProps) {
   const [name, setName] = useState('');
-  const [avatar, setAvatar] = useState<string>(MUSIC_EMOJIS[0]);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -37,7 +34,6 @@ export function CreateGroup({ locale }: CreateGroupProps) {
       return;
     }
 
-    // maxLength on the input is 60 — enforce the same here defensively
     if (trimmed.length > 60) {
       setError(t('create.error.empty', locale));
       return;
@@ -52,15 +48,13 @@ export function CreateGroup({ locale }: CreateGroupProps) {
     setIsSubmitting(true);
 
     try {
-      // Create the group
-      const { data: group, error: groupError } = await supabase
+      const { error: groupError } = await supabase
         .from('groups')
         .insert({ name: trimmed, slug, songs_per_round: 5 })
         .select()
         .single();
 
       if (groupError) {
-        // Unique constraint on slug
         if (groupError.code === '23505') {
           setError(t('create.error.exists', locale));
           setIsSubmitting(false);
@@ -69,29 +63,10 @@ export function CreateGroup({ locale }: CreateGroupProps) {
         throw groupError;
       }
 
-      // Create the first member (creator)
-      const { data: member, error: memberError } = await supabase
-        .from('members')
-        .insert({
-          group_id: group.id,
-          name: trimmed,
-          avatar,
-        })
-        .select()
-        .single();
-
-      if (memberError) {
-        throw memberError;
-      }
-
-      // Store member ID in localStorage
-      setMemberId(slug, member.id);
-
-      // Redirect to group page
+      // Redirect to group page — JoinGroup will ask for the user's name
       const prefix = locale === 'es' ? '/es' : '';
       window.location.href = `${prefix}/g/${slug}`;
     } catch (err) {
-      // Do not surface raw Supabase/DB error messages to the user
       console.error('[CreateGroup] unexpected error:', err);
       setError(t('create.error.generic', locale));
       setIsSubmitting(false);
@@ -121,12 +96,6 @@ export function CreateGroup({ locale }: CreateGroupProps) {
             className="w-full rounded-md border border-border bg-bg-input px-4 py-2.5 text-text placeholder:text-text-tertiary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           />
         </div>
-
-        <EmojiPicker
-          selected={avatar}
-          onSelect={setAvatar}
-          label={t('create.pickAvatar', locale)}
-        />
 
         {error && (
           <p role="alert" className="text-sm text-error">
