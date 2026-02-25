@@ -34,8 +34,7 @@ export interface Song {
   artist: string;
   album: string | null;
   thumbnail_url: string | null;
-  spotify_url: string | null;
-  youtube_url: string | null;
+  platform_links: { platform: string; url: string }[];
   odesli_page_url: string | null;
   created_at: string;
 }

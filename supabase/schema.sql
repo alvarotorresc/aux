@@ -41,8 +41,7 @@ create table songs (
   artist text not null check (char_length(artist) <= 300),
   album text check (album is null or char_length(album) <= 300),
   thumbnail_url text check (thumbnail_url is null or thumbnail_url ~ '^https://'),
-  spotify_url text check (spotify_url is null or spotify_url ~ '^https://'),
-  youtube_url text check (youtube_url is null or youtube_url ~ '^https://'),
+  platform_links jsonb not null default '[]',
   odesli_page_url text check (odesli_page_url is null or odesli_page_url ~ '^https://'),
   created_at timestamptz default now()
 );

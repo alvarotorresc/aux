@@ -153,8 +153,7 @@ export function useGroup(
           artist: resolved.artist,
           album: resolved.album,
           thumbnail_url: resolved.thumbnailUrl,
-          spotify_url: resolved.spotifyUrl,
-          youtube_url: resolved.youtubeUrl,
+          platform_links: resolved.platformLinks,
           odesli_page_url: resolved.pageUrl,
         })
         .select()

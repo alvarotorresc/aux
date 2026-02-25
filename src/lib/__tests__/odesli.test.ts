@@ -96,10 +96,12 @@ describe('resolveSongLink', () => {
     expect(result.title).toBe('Bohemian Rhapsody');
     expect(result.artist).toBe('Queen');
     expect(result.thumbnailUrl).toBe('https://i.scdn.co/image/abc');
-    expect(result.spotifyUrl).toBe('https://open.spotify.com/track/abc123');
-    expect(result.youtubeUrl).toBe('https://www.youtube.com/watch?v=fJ9rUzIMcZQ');
     expect(result.pageUrl).toBe('https://song.link/s/abc123');
     expect(result.album).toBeNull();
+    const spotify = result.platformLinks.find((l) => l.platform === 'spotify');
+    const youtube = result.platformLinks.find((l) => l.platform === 'youtube');
+    expect(spotify?.url).toBe('https://open.spotify.com/track/abc123');
+    expect(youtube?.url).toBe('https://www.youtube.com/watch?v=fJ9rUzIMcZQ');
   });
 
   it('should call the Odesli API with the encoded URL', async () => {
@@ -159,7 +161,7 @@ describe('resolveSongLink', () => {
     );
   });
 
-  it('should return null spotifyUrl when spotify is absent from linksByPlatform', async () => {
+  it('should add fallback search links when spotify is absent', async () => {
     const mockFetch = vi.mocked(fetch);
     mockFetch.mockResolvedValue(
       makeOkResponse(
@@ -176,11 +178,12 @@ describe('resolveSongLink', () => {
 
     const result = await resolveSongLink('https://open.spotify.com/track/abc123');
 
-    expect(result.spotifyUrl).toBeNull();
-    expect(result.youtubeUrl).toBe('https://www.youtube.com/watch?v=fJ9rUzIMcZQ');
+    const spotify = result.platformLinks.find((l) => l.platform === 'spotify');
+    expect(spotify).toBeDefined();
+    expect(spotify!.url).toContain('open.spotify.com/search/');
   });
 
-  it('should fall back to youtubeMusic when youtube is absent from linksByPlatform', async () => {
+  it('should include youtubeMusic as a separate platform link', async () => {
     const mockFetch = vi.mocked(fetch);
     mockFetch.mockResolvedValue(
       makeOkResponse(
@@ -201,6 +204,8 @@ describe('resolveSongLink', () => {
 
     const result = await resolveSongLink('https://open.spotify.com/track/abc123');
 
-    expect(result.youtubeUrl).toBe('https://music.youtube.com/watch?v=fJ9rUzIMcZQ');
+    const ytMusic = result.platformLinks.find((l) => l.platform === 'youtubeMusic');
+    expect(ytMusic).toBeDefined();
+    expect(ytMusic!.url).toBe('https://music.youtube.com/watch?v=fJ9rUzIMcZQ');
   });
 });

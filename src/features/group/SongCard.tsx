@@ -80,7 +80,7 @@ export function SongCard({ song, memberId, members, onRate, locale }: SongCardPr
 
         {/* Platform links */}
         <div className="mb-3">
-          <PlatformLinks spotifyUrl={song.spotify_url} youtubeUrl={song.youtube_url} />
+          <PlatformLinks links={song.platform_links} />
         </div>
 
         {/* Rating section */}

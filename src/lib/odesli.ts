@@ -48,13 +48,17 @@ interface OdesliResponse {
   >;
 }
 
+export interface PlatformLink {
+  platform: string;
+  url: string;
+}
+
 export interface ResolvedSong {
   title: string;
   artist: string;
   album: string | null;
   thumbnailUrl: string | null;
-  spotifyUrl: string | null;
-  youtubeUrl: string | null;
+  platformLinks: PlatformLink[];
   pageUrl: string;
 }
 
@@ -133,14 +137,36 @@ export async function resolveSongLink(url: string): Promise<ResolvedSong> {
     throw new Error('Could not extract song information from the resolved link.');
   }
 
-  // Extract platform-specific URLs
-  const spotifyLink = data.linksByPlatform.spotify;
-  const youtubeLink = data.linksByPlatform.youtube ?? data.linksByPlatform.youtubeMusic;
+  // Extract all platform links, sanitise each URL
+  const platformLinks: PlatformLink[] = [];
+  for (const [platform, link] of Object.entries(data.linksByPlatform)) {
+    const safeUrl = safeHttpsUrl(link?.url);
+    if (safeUrl) {
+      platformLinks.push({ platform, url: safeUrl });
+    }
+  }
 
-  // Sanitise all URLs coming from the external API before they are stored in DB or rendered.
+  const title = (primaryEntity.title ?? 'Unknown Title').slice(0, 300);
+  const artist = (primaryEntity.artistName ?? 'Unknown Artist').slice(0, 300);
+  const searchQuery = encodeURIComponent(`${title} ${artist}`);
+
+  // Fallback: if Spotify is missing, add a search link
+  if (!platformLinks.some((l) => l.platform === 'spotify')) {
+    platformLinks.push({
+      platform: 'spotify',
+      url: `https://open.spotify.com/search/${searchQuery}`,
+    });
+  }
+
+  // Fallback: if YouTube Music is missing, add a search link
+  if (!platformLinks.some((l) => l.platform === 'youtubeMusic')) {
+    platformLinks.push({
+      platform: 'youtubeMusic',
+      url: `https://music.youtube.com/search?q=${searchQuery}`,
+    });
+  }
+
   const thumbnailUrl = safeHttpsUrl(primaryEntity.thumbnailUrl);
-  const spotifyUrl = safeHttpsUrl(spotifyLink?.url);
-  const youtubeUrl = safeHttpsUrl(youtubeLink?.url);
   const pageUrl = safeHttpsUrl(data.pageUrl);
 
   if (!pageUrl) {
@@ -148,12 +174,11 @@ export async function resolveSongLink(url: string): Promise<ResolvedSong> {
   }
 
   return {
-    title: (primaryEntity.title ?? 'Unknown Title').slice(0, 300),
-    artist: (primaryEntity.artistName ?? 'Unknown Artist').slice(0, 300),
-    album: null, // Odesli entity does not reliably expose album name
+    title,
+    artist,
+    album: null,
     thumbnailUrl,
-    spotifyUrl,
-    youtubeUrl,
+    platformLinks,
     pageUrl,
   };
 }
