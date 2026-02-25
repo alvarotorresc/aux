@@ -43,6 +43,7 @@
   "join.error.generic": "Algo salio mal. Por favor, intentalo de nuevo.",
   "group.members": "Miembros",
   "group.share": "Compartir enlace de invitacion",
+  "group.copied": "Enlace copiado!",
   "group.notFound": "Grupo no encontrado",
   "group.notFoundDesc": "Este grupo no existe o el enlace es incorrecto.",
   "group.backHome": "Volver al inicio",

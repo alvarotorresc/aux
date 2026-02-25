@@ -43,6 +43,7 @@
   "join.error.generic": "Something went wrong. Please try again.",
   "group.members": "Members",
   "group.share": "Share invite link",
+  "group.copied": "Link copied!",
   "group.notFound": "Group not found",
   "group.notFoundDesc": "This group doesn't exist or the link is wrong.",
   "group.backHome": "Back to home",

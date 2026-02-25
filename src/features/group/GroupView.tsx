@@ -22,34 +22,55 @@ type Tab = 'songs' | 'ranking';
 // --- Sub-components ---
 
 function ShareButton({ slug, locale }: { slug: string; locale: Locale }) {
-  function handleShare() {
+  const [copied, setCopied] = useState(false);
+
+  async function handleShare() {
     const url = `${window.location.origin}/g/${slug}`;
     if (navigator.share) {
       navigator.share({ title: 'Aux', url });
     } else {
-      navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   }
 
   return (
     <Button variant="secondary" size="sm" onClick={handleShare}>
-      <svg
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="mr-1.5"
-        aria-hidden="true"
-      >
-        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-        <polyline points="16 6 12 2 8 6" />
-        <line x1="12" x2="12" y1="2" y2="15" />
-      </svg>
-      {t('group.share', locale)}
+      {copied ? (
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="mr-1.5"
+          aria-hidden="true"
+        >
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      ) : (
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="mr-1.5"
+          aria-hidden="true"
+        >
+          <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+          <polyline points="16 6 12 2 8 6" />
+          <line x1="12" x2="12" y1="2" y2="15" />
+        </svg>
+      )}
+      {copied ? t('group.copied', locale) : t('group.share', locale)}
     </Button>
   );
 }
