@@ -21,20 +21,18 @@ type Tab = 'songs' | 'ranking';
 
 // --- Sub-components ---
 
-function ShareButton({ slug, locale }: { slug: string; locale: Locale }) {
+function ShareButton({ locale }: { locale: Locale }) {
   const [copied, setCopied] = useState(false);
 
   async function handleShare() {
-    const prefix = locale === 'es' ? '/es' : '';
-    const url = `${window.location.origin}${prefix}/g/${slug}`;
+    const shareUrl = window.location.href.split('?')[0];
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Clipboard API not available — fallback to native share
       if (navigator.share) {
-        navigator.share({ title: 'Aux', url });
+        navigator.share({ title: 'Aux', url: shareUrl });
       }
     }
   }
@@ -115,7 +113,7 @@ function GroupNav({
           </div>
         </div>
       </div>
-      <ShareButton slug={group.slug} locale={locale} />
+      <ShareButton locale={locale} />
     </nav>
   );
 }
