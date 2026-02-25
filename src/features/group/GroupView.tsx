@@ -27,12 +27,15 @@ function ShareButton({ slug, locale }: { slug: string; locale: Locale }) {
   async function handleShare() {
     const prefix = locale === 'es' ? '/es' : '';
     const url = `${window.location.origin}${prefix}/g/${slug}`;
-    if (navigator.share) {
-      navigator.share({ title: 'Aux', url });
-    } else {
+    try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard API not available — fallback to native share
+      if (navigator.share) {
+        navigator.share({ title: 'Aux', url });
+      }
     }
   }
 
