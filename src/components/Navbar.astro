@@ -1,0 +1,17 @@
+---
+import { LogoWithText } from './ui/Logo';
+import { ThemeToggle } from './ThemeToggle';
+import LanguageToggle from './LanguageToggle.astro';
+---
+
+<nav
+  class="sticky top-0 z-50 flex items-center justify-between border-b border-border bg-bg px-5 py-4"
+>
+  <a href="/" aria-label="Aux home">
+    <LogoWithText size={28} />
+  </a>
+  <div class="flex items-center gap-4">
+    <LanguageToggle />
+    <ThemeToggle client:load />
+  </div>
+</nav>

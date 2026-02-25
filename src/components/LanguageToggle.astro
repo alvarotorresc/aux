@@ -1,0 +1,22 @@
+---
+const currentLocale = Astro.currentLocale ?? 'en';
+const currentPath = Astro.url.pathname;
+
+function getAlternatePath(path: string, fromLocale: string): string {
+  if (fromLocale === 'en') {
+    return `/es${path}`;
+  }
+  return path.replace(/^\/es/, '') || '/';
+}
+
+const alternatePath = getAlternatePath(currentPath, currentLocale);
+const label = currentLocale === 'en' ? 'EN' : 'ES';
+---
+
+<a
+  href={alternatePath}
+  class="inline-flex items-center justify-center rounded-sm border border-border bg-transparent px-2 py-1 text-[13px] text-text-secondary hover:text-text hover:border-text-secondary transition-colors"
+  aria-label={currentLocale === 'en' ? 'Cambiar a espanol' : 'Switch to English'}
+>
+  {label}
+</a>
