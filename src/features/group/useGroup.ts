@@ -31,7 +31,11 @@ function enrichSong(song: Song, votes: Vote[]): SongWithVotes {
  * - Adding songs (via Odesli resolution)
  * - Voting on songs (upsert with optimistic update)
  */
-export function useGroup(groupId: string, memberId: string | null): UseGroupResult {
+export function useGroup(
+  groupId: string,
+  memberId: string | null,
+  songsPerRound: number = 5,
+): UseGroupResult {
   const [round, setRound] = useState<Round | null>(null);
   const [songs, setSongs] = useState<SongWithVotes[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -126,6 +130,14 @@ export function useGroup(groupId: string, memberId: string | null): UseGroupResu
     async (url: string) => {
       if (!round || !memberId) {
         throw new Error('Cannot add song: no active round or member');
+      }
+
+      // Check song limit per round
+      const mySongsThisRound = songs.filter(
+        (s) => s.member_id === memberId && s.round_id === round.id,
+      );
+      if (mySongsThisRound.length >= songsPerRound) {
+        throw new Error(`You can only add ${songsPerRound} songs per round`);
       }
 
       // Resolve via Odesli

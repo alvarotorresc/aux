@@ -147,6 +147,7 @@ function GroupContent({
   const { round, songs, isLoading, error, addSong, voteSong, refetch } = useGroup(
     group.id,
     memberId,
+    group.songs_per_round,
   );
 
   if (isLoading) {
@@ -175,7 +176,9 @@ function GroupContent({
 
       {activeTab === 'songs' ? (
         <div className="flex flex-col gap-3 p-5">
-          <AddSong onAddSong={addSong} locale={locale} />
+          {songs.filter((s) => s.member_id === memberId).length < group.songs_per_round && (
+            <AddSong onAddSong={addSong} locale={locale} />
+          )}
           {songs.map((song) => (
             <SongCard
               key={song.id}

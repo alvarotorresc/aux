@@ -9,7 +9,7 @@ create table groups (
   id uuid default gen_random_uuid() primary key,
   name text not null check (char_length(name) <= 60),
   slug text not null unique check (char_length(slug) <= 80 and slug ~ '^[a-z0-9][a-z0-9-]*[a-z0-9]$'),
-  songs_per_round int not null default 3 check (songs_per_round >= 1 and songs_per_round <= 20),
+  songs_per_round int not null default 5 check (songs_per_round >= 1 and songs_per_round <= 20),
   created_at timestamptz default now()
 );
 

@@ -55,7 +55,7 @@ export function CreateGroup({ locale }: CreateGroupProps) {
       // Create the group
       const { data: group, error: groupError } = await supabase
         .from('groups')
-        .insert({ name: trimmed, slug, songs_per_round: 2 })
+        .insert({ name: trimmed, slug, songs_per_round: 5 })
         .select()
         .single();
 
