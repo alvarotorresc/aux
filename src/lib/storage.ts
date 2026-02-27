@@ -33,3 +33,37 @@ export function removeMemberId(slug: string): void {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(storageKey(slug));
 }
+
+// --- My groups (for quick navigation from landing) ---
+
+const GROUPS_KEY = 'aux:my-groups';
+
+export interface SavedGroup {
+  slug: string;
+  name: string;
+}
+
+/** Save a group to the user's local list (deduplicates by slug) */
+export function saveMyGroup(slug: string, name: string): void {
+  if (typeof window === 'undefined') return;
+  const groups = getMyGroups();
+  const existing = groups.findIndex((g) => g.slug === slug);
+  if (existing !== -1) {
+    groups[existing].name = name;
+  } else {
+    groups.push({ slug, name });
+  }
+  localStorage.setItem(GROUPS_KEY, JSON.stringify(groups));
+}
+
+/** Get all groups the user has joined */
+export function getMyGroups(): SavedGroup[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(GROUPS_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw) as SavedGroup[];
+  } catch {
+    return [];
+  }
+}
