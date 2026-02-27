@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Locale } from '../../../site.config';
 import { t } from '../../i18n';
+import { buildJoinUrl } from '../../lib/join-by-code';
 
 interface JoinByCodeProps {
   locale: Locale;
@@ -11,10 +12,9 @@ export function JoinByCode({ locale }: JoinByCodeProps) {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const slug = code.toLowerCase().trim().replace(/\s+/g, '-');
-    if (slug) {
-      const prefix = locale === 'es' ? '/es' : '';
-      window.location.href = `${prefix}/g/${slug}`;
+    const url = buildJoinUrl(code, locale);
+    if (url) {
+      window.location.href = url;
     }
   }
 
