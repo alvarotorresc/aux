@@ -9,14 +9,14 @@ interface CreateGroupProps {
   locale: Locale;
 }
 
-function slugify(name: string): string {
-  return name
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
+function generateCode(): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let code = '';
+  const array = crypto.getRandomValues(new Uint8Array(6));
+  for (const byte of array) {
+    code += chars[byte % chars.length];
+  }
+  return code;
 }
 
 export function CreateGroup({ locale }: CreateGroupProps) {
@@ -39,15 +39,10 @@ export function CreateGroup({ locale }: CreateGroupProps) {
       return;
     }
 
-    const slug = slugify(trimmed);
-    if (!slug || slug.length < 2) {
-      setError(t('create.error.empty', locale));
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
+      const slug = generateCode();
       const { error: groupError } = await supabase
         .from('groups')
         .insert({ name: trimmed, slug, songs_per_round: 5 })
@@ -56,8 +51,9 @@ export function CreateGroup({ locale }: CreateGroupProps) {
 
       if (groupError) {
         if (groupError.code === '23505') {
-          setError(t('create.error.exists', locale));
+          // Code collision — extremely unlikely with 6 chars, just retry
           setIsSubmitting(false);
+          handleSubmit(e);
           return;
         }
         throw groupError;
