@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Locale } from '../../../site.config';
 import type { Group, Member } from '../../lib/types';
 import { t } from '../../i18n';
 import { Button } from '../../components/ui/Button';
+import { saveMyGroup } from '../../lib/storage';
 import { useMember } from '../../hooks/useMember';
 import { JoinGroup } from '../join/JoinGroup';
 import { useGroup } from './useGroup';
@@ -22,77 +23,56 @@ type Tab = 'songs' | 'ranking';
 // --- Sub-components ---
 
 function ShareButton({ slug, locale }: { slug: string; locale: Locale }) {
-  const [copied, setCopied] = useState<'link' | 'code' | false>(false);
-
-  async function handleShare() {
-    const shareUrl = window.location.href.split('?')[0];
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setCopied('link');
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      if (navigator.share) {
-        navigator.share({ title: 'Aux', url: shareUrl });
-      }
-    }
-  }
+  const [copied, setCopied] = useState(false);
 
   async function handleCopyCode() {
     try {
       await navigator.clipboard.writeText(slug);
-      setCopied('code');
+      setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback: do nothing
+      if (navigator.share) {
+        navigator.share({ title: 'Aux', text: slug });
+      }
     }
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <button
-        onClick={handleCopyCode}
-        className="rounded-md border border-border bg-bg-input px-2.5 py-1.5 font-mono text-xs text-text-secondary transition-colors hover:border-accent hover:text-accent"
-        title={t('group.code', locale)}
-      >
-        {copied === 'code' ? t('group.copied', locale) : slug}
-      </button>
-      <Button variant="secondary" size="sm" onClick={handleShare}>
-        {copied === 'link' ? (
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-        ) : (
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-            <polyline points="16 6 12 2 8 6" />
-            <line x1="12" x2="12" y1="2" y2="15" />
-          </svg>
-        )}
-        <span className="hidden sm:inline">
-          {copied === 'link' ? t('group.copied', locale) : t('group.share', locale)}
-        </span>
-      </Button>
-    </div>
+    <Button variant="secondary" size="sm" onClick={handleCopyCode}>
+      {copied ? (
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="sm:mr-1.5"
+          aria-hidden="true"
+        >
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      ) : (
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="sm:mr-1.5"
+          aria-hidden="true"
+        >
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+        </svg>
+      )}
+      <span className="hidden sm:inline">{copied ? t('group.copied', locale) : slug}</span>
+    </Button>
   );
 }
 
@@ -324,6 +304,12 @@ function GroupContent({
  */
 export function GroupView({ group, members, locale }: GroupViewProps) {
   const { member, isLoading } = useMember(group.slug);
+
+  useEffect(() => {
+    if (member) {
+      saveMyGroup(group.slug, group.name);
+    }
+  }, [member, group.slug, group.name]);
 
   if (isLoading) {
     return <LoadingSpinner />;
