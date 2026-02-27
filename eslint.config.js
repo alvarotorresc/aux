@@ -3,7 +3,16 @@ import tseslint from '@typescript-eslint/eslint-plugin';
 import tsparser from '@typescript-eslint/parser';
 
 export default [
-  { ignores: ['dist/**', '.astro/**', 'node_modules/**', 'prototype/**'] },
+  {
+    ignores: [
+      'dist/**',
+      '.astro/**',
+      'node_modules/**',
+      'prototype/**',
+      'android/**',
+      'dist-capacitor/**',
+    ],
+  },
   ...eslintPluginAstro.configs.recommended,
   {
     files: ['**/*.ts', '**/*.tsx'],
