@@ -21,14 +21,14 @@ type Tab = 'songs' | 'ranking';
 
 // --- Sub-components ---
 
-function ShareButton({ locale }: { locale: Locale }) {
-  const [copied, setCopied] = useState(false);
+function ShareButton({ slug, locale }: { slug: string; locale: Locale }) {
+  const [copied, setCopied] = useState<'link' | 'code' | false>(false);
 
   async function handleShare() {
     const shareUrl = window.location.href.split('?')[0];
     try {
       await navigator.clipboard.writeText(shareUrl);
-      setCopied(true);
+      setCopied('link');
       setTimeout(() => setCopied(false), 2000);
     } catch {
       if (navigator.share) {
@@ -37,45 +37,62 @@ function ShareButton({ locale }: { locale: Locale }) {
     }
   }
 
+  async function handleCopyCode() {
+    try {
+      await navigator.clipboard.writeText(slug);
+      setCopied('code');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback: do nothing
+    }
+  }
+
   return (
-    <Button variant="secondary" size="sm" onClick={handleShare}>
-      {copied ? (
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="sm:mr-1.5"
-          aria-hidden="true"
-        >
-          <polyline points="20 6 9 17 4 12" />
-        </svg>
-      ) : (
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="sm:mr-1.5"
-          aria-hidden="true"
-        >
-          <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-          <polyline points="16 6 12 2 8 6" />
-          <line x1="12" x2="12" y1="2" y2="15" />
-        </svg>
-      )}
-      <span className="hidden sm:inline">
-        {copied ? t('group.copied', locale) : t('group.share', locale)}
-      </span>
-    </Button>
+    <div className="flex items-center gap-2">
+      <button
+        onClick={handleCopyCode}
+        className="rounded-md border border-border bg-bg-input px-2.5 py-1.5 font-mono text-xs text-text-secondary transition-colors hover:border-accent hover:text-accent"
+        title={t('group.code', locale)}
+      >
+        {copied === 'code' ? t('group.copied', locale) : slug}
+      </button>
+      <Button variant="secondary" size="sm" onClick={handleShare}>
+        {copied === 'link' ? (
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        ) : (
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+            <polyline points="16 6 12 2 8 6" />
+            <line x1="12" x2="12" y1="2" y2="15" />
+          </svg>
+        )}
+        <span className="hidden sm:inline">
+          {copied === 'link' ? t('group.copied', locale) : t('group.share', locale)}
+        </span>
+      </Button>
+    </div>
   );
 }
 
@@ -113,7 +130,7 @@ function GroupNav({
           </div>
         </div>
       </div>
-      <ShareButton locale={locale} />
+      <ShareButton slug={group.slug} locale={locale} />
     </nav>
   );
 }
