@@ -1,6 +1,10 @@
 import type { APIRoute } from 'astro';
+import { createRateLimiter } from '../../lib/rate-limiter';
 
 const ODESLI_API = 'https://api.song.link/v1-alpha.1/links';
+
+/** Max response body size from Odesli API (500 KB) to prevent memory abuse */
+const MAX_RESPONSE_BYTES = 512 * 1024;
 
 /** Allowed music platform hostnames (mirrors the client-side whitelist in odesli.ts) */
 const ALLOWED_HOSTS = new Set([
@@ -24,13 +28,41 @@ const ALLOWED_HOSTS = new Set([
   'odesli.co',
 ]);
 
+/** In-memory rate limiter — 10 requests per minute per IP */
+const rateLimiter = createRateLimiter({ maxRequests: 10, windowMs: 60_000 });
+
+/**
+ * Extract client IP from the request. Netlify sets X-Forwarded-For;
+ * take only the first address (leftmost = original client).
+ */
+function getClientIp(request: Request): string {
+  const forwarded = request.headers.get('x-forwarded-for');
+  if (forwarded) {
+    const first = forwarded.split(',')[0].trim();
+    if (first) return first;
+  }
+  return 'unknown';
+}
+
 /**
  * Server-side proxy for the Odesli API.
  * Avoids CORS issues since the browser calls our own origin.
  *
  * GET /api/resolve?url=<encoded-music-url>
  */
-export const GET: APIRoute = async ({ url }) => {
+export const GET: APIRoute = async ({ url, request }) => {
+  // Rate limiting
+  const clientIp = getClientIp(request);
+  if (!rateLimiter.check(clientIp)) {
+    return new Response(JSON.stringify({ error: 'Too many requests. Try again in a minute.' }), {
+      status: 429,
+      headers: {
+        'Content-Type': 'application/json',
+        'Retry-After': '60',
+      },
+    });
+  }
+
   const musicUrl = url.searchParams.get('url');
 
   if (!musicUrl) {
@@ -61,6 +93,14 @@ export const GET: APIRoute = async ({ url }) => {
     const response = await fetch(endpoint);
 
     const body = await response.text();
+
+    // Guard against unexpectedly large responses from the upstream API
+    if (body.length > MAX_RESPONSE_BYTES) {
+      return new Response(JSON.stringify({ error: 'Response too large' }), {
+        status: 502,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
 
     return new Response(body, {
       status: response.status,

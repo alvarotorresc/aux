@@ -1,18 +1,30 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { GET } from '../resolve';
+
+// Mock the rate limiter module before importing the handler.
+// This lets us control rate limiting behavior in tests without dealing
+// with the module-level singleton state.
+const mockCheck = vi.fn(() => true);
+vi.mock('../../../lib/rate-limiter', () => ({
+  createRateLimiter: () => ({ check: mockCheck, size: () => 0 }),
+}));
+
+// Import after mock setup
+const { GET } = await import('../resolve');
 
 // --- Helpers ---
 
-/** Build a minimal Astro APIContext with the given search params */
-function makeContext(params?: Record<string, string>) {
+/** Build a minimal Astro APIContext with search params and request headers */
+function makeContext(params?: Record<string, string>, headers?: Record<string, string>) {
   const url = new URL('http://localhost:4321/api/resolve');
   if (params) {
     for (const [key, value] of Object.entries(params)) {
       url.searchParams.set(key, value);
     }
   }
-  // Cast to the shape expected by the APIRoute handler
-  return { url } as Parameters<typeof GET>[0];
+  const request = new Request(url, {
+    headers: new Headers(headers),
+  });
+  return { url, request } as Parameters<typeof GET>[0];
 }
 
 /** Parse the JSON body and status from a Response */
@@ -24,10 +36,74 @@ async function parseResponse(response: Response) {
 describe('GET /api/resolve', () => {
   beforeEach(() => {
     vi.stubGlobal('fetch', vi.fn());
+    mockCheck.mockReturnValue(true);
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    mockCheck.mockReset();
+    mockCheck.mockReturnValue(true);
+  });
+
+  // --- Rate limiting ---
+
+  describe('rate limiting', () => {
+    it('should return 429 when rate limit is exceeded', async () => {
+      mockCheck.mockReturnValue(false);
+
+      const response = await GET(makeContext({ url: 'https://open.spotify.com/track/abc' }));
+      const { status, body } = await parseResponse(response);
+
+      expect(status).toBe(429);
+      expect(body.error).toContain('Too many requests');
+      expect(response.headers.get('Retry-After')).toBe('60');
+    });
+
+    it('should allow requests when under rate limit', async () => {
+      mockCheck.mockReturnValue(true);
+      const mockFetch = vi.mocked(fetch);
+      mockFetch.mockResolvedValue(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+
+      const response = await GET(makeContext({ url: 'https://open.spotify.com/track/abc123' }));
+
+      expect(response.status).toBe(200);
+    });
+
+    it('should extract client IP from X-Forwarded-For header', async () => {
+      mockCheck.mockReturnValue(true);
+      const mockFetch = vi.mocked(fetch);
+      mockFetch.mockResolvedValue(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+
+      await GET(
+        makeContext(
+          { url: 'https://open.spotify.com/track/abc123' },
+          { 'x-forwarded-for': '203.0.113.50, 70.41.3.18' },
+        ),
+      );
+
+      // The rate limiter check should be called with the first IP
+      expect(mockCheck).toHaveBeenCalledWith('203.0.113.50');
+    });
+
+    it('should use "unknown" when no IP headers are present', async () => {
+      mockCheck.mockReturnValue(true);
+      const mockFetch = vi.mocked(fetch);
+      mockFetch.mockResolvedValue(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+
+      await GET(makeContext({ url: 'https://open.spotify.com/track/abc123' }));
+
+      expect(mockCheck).toHaveBeenCalledWith('unknown');
+    });
+
+    it('should check rate limit before processing the request', async () => {
+      mockCheck.mockReturnValue(false);
+      const mockFetch = vi.mocked(fetch);
+
+      await GET(makeContext({ url: 'https://open.spotify.com/track/abc123' }));
+
+      // fetch should NOT have been called since rate limit was hit first
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
   });
 
   // --- Missing / invalid URL parameter ---
@@ -144,6 +220,21 @@ describe('GET /api/resolve', () => {
     const response = await GET(makeContext({ url: 'https://open.spotify.com/track/abc123' }));
 
     expect(response.status).toBe(500);
+  });
+
+  // --- Response size guard ---
+
+  it('should return 502 when Odesli response exceeds size limit', async () => {
+    const mockFetch = vi.mocked(fetch);
+    // Create a response body larger than 512 KB
+    const largeBody = 'x'.repeat(512 * 1024 + 1);
+    mockFetch.mockResolvedValue(new Response(largeBody, { status: 200 }));
+
+    const response = await GET(makeContext({ url: 'https://open.spotify.com/track/abc123' }));
+    const { status, body } = await parseResponse(response);
+
+    expect(status).toBe(502);
+    expect(body.error).toBe('Response too large');
   });
 
   // --- Network errors ---
