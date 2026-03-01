@@ -4,10 +4,10 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { AddSong } from '../AddSong';
 
 describe('AddSong', () => {
-  let mockOnAddSong: ReturnType<typeof vi.fn>;
+  let mockOnAddSong: ReturnType<typeof vi.fn<(url: string) => Promise<void>>>;
 
   beforeEach(() => {
-    mockOnAddSong = vi.fn();
+    mockOnAddSong = vi.fn<(url: string) => Promise<void>>();
   });
 
   it('should render input and submit button', () => {
