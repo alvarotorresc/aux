@@ -35,7 +35,7 @@ function enrichSong(song: Song, votes: Vote[]): SongWithVotes {
 export function useGroup(
   groupId: string,
   memberId: string | null,
-  songsPerRound: number = 5,
+  songsPerRound: number = 3,
   initialMembers: Member[] = [],
 ): UseGroupResult {
   const [round, setRound] = useState<Round | null>(null);
