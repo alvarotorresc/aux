@@ -36,6 +36,8 @@ interface UseLeaderboardResult {
   members: MemberStats[];
   pastRounds: PastRound[];
   topSongs: AllTimeSong[];
+  currentRoundNumber: number | null;
+  currentRoundSongs: PastRoundSong[];
   isLoading: boolean;
   error: string | null;
 }
@@ -100,6 +102,8 @@ export function useLeaderboard(groupId: string): UseLeaderboardResult {
   const [members, setMembers] = useState<MemberStats[]>([]);
   const [pastRounds, setPastRounds] = useState<PastRound[]>([]);
   const [topSongs, setTopSongs] = useState<AllTimeSong[]>([]);
+  const [currentRoundNumber, setCurrentRoundNumber] = useState<number | null>(null);
+  const [currentRoundSongs, setCurrentRoundSongs] = useState<PastRoundSong[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -148,6 +152,8 @@ export function useLeaderboard(groupId: string): UseLeaderboardResult {
         );
         setPastRounds([]);
         setTopSongs([]);
+        setCurrentRoundNumber(null);
+        setCurrentRoundSongs([]);
         return;
       }
 
@@ -233,6 +239,24 @@ export function useLeaderboard(groupId: string): UseLeaderboardResult {
       allTimeSongsAcc.sort((a, b) => b.avgRating - a.avgRating);
       const topSongsResult = allTimeSongsAcc.slice(0, 5);
 
+      // Current round songs (live ranking for the ongoing round)
+      const currentRoundSongsData: PastRoundSong[] = groupSongs
+        .filter((s) => s.round_id === currentRoundId)
+        .map((song) => {
+          const { avg, total } = computeSongAvg(song.id, groupVotes);
+          const memberName = allMembers.find((m) => m.id === song.member_id)?.name ?? '?';
+          return {
+            id: song.id,
+            title: song.title,
+            artist: song.artist,
+            thumbnail_url: song.thumbnail_url,
+            memberName,
+            avgRating: avg,
+            totalVotes: total,
+          };
+        })
+        .sort((a, b) => b.avgRating - a.avgRating || b.totalVotes - a.totalVotes);
+
       // Compute member stats — only songs from completed (past) rounds
       const completedSongs = groupSongs.filter((s) => s.round_id !== currentRoundId);
 
@@ -271,6 +295,8 @@ export function useLeaderboard(groupId: string): UseLeaderboardResult {
       setMembers(memberStats);
       setPastRounds(pastRoundData);
       setTopSongs(topSongsResult);
+      setCurrentRoundNumber(currentRound?.number ?? null);
+      setCurrentRoundSongs(currentRoundSongsData);
     } catch (err) {
       if (!mountedRef.current) return;
       const message = err instanceof Error ? err.message : 'Failed to load leaderboard';
@@ -292,5 +318,5 @@ export function useLeaderboard(groupId: string): UseLeaderboardResult {
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  return { members, pastRounds, topSongs, isLoading, error };
+  return { members, pastRounds, topSongs, currentRoundNumber, currentRoundSongs, isLoading, error };
 }
