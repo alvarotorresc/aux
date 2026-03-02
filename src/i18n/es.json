@@ -75,6 +75,8 @@
   "leaderboard.allTime": "Clasificacion historica",
   "leaderboard.pastRounds": "Rondas pasadas",
   "leaderboard.noPastRounds": "Aun no hay rondas pasadas",
+  "leaderboard.topSongs": "Top 5 canciones de todos los tiempos",
+  "leaderboard.noTopSongs": "Aun no hay canciones puntuadas",
   "leaderboard.songs": "canciones",
   "leaderboard.avg": "media",
   "leaderboard.wins": "victorias",

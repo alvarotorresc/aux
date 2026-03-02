@@ -141,9 +141,11 @@ describe('useLeaderboard', () => {
     expect(result.current.members[0].roundsWon).toBe(0);
   });
 
-  it('should calculate totalScore as sum of all ratings received', async () => {
+  it('should calculate totalScore as sum of all ratings received (completed rounds only)', async () => {
     const alice = makeMember({ id: 'alice' });
-    const currentRound = makeRound({ id: 'round-1', number: 1 });
+    // round-2 is most recent → current; round-1 is past
+    const pastRound = makeRound({ id: 'round-1', number: 1 });
+    const currentRound = makeRound({ id: 'round-2', number: 2 });
     const song = makeSong({ id: 'song-a', member_id: 'alice', round_id: 'round-1' });
     const votes = [
       makeVote({ id: 'v1', song_id: 'song-a', member_id: 'bob', rating: 4 }),
@@ -151,7 +153,7 @@ describe('useLeaderboard', () => {
     ];
 
     mockData.members = { data: [alice], error: null };
-    mockData.rounds = { data: [currentRound], error: null };
+    mockData.rounds = { data: [currentRound, pastRound], error: null };
     mockData.songs = { data: [song], error: null };
     mockData.votes = { data: votes, error: null };
 
@@ -164,9 +166,10 @@ describe('useLeaderboard', () => {
     expect(result.current.members[0].totalScore).toBe(7); // 4 + 3
   });
 
-  it('should calculate avgReceived as mean of all ratings', async () => {
+  it('should calculate avgReceived as mean of all ratings (completed rounds only)', async () => {
     const alice = makeMember({ id: 'alice' });
-    const currentRound = makeRound({ id: 'round-1', number: 1 });
+    const pastRound = makeRound({ id: 'round-1', number: 1 });
+    const currentRound = makeRound({ id: 'round-2', number: 2 });
     const song = makeSong({ id: 'song-a', member_id: 'alice', round_id: 'round-1' });
     const votes = [
       makeVote({ id: 'v1', song_id: 'song-a', member_id: 'bob', rating: 4 }),
@@ -174,7 +177,7 @@ describe('useLeaderboard', () => {
     ];
 
     mockData.members = { data: [alice], error: null };
-    mockData.rounds = { data: [currentRound], error: null };
+    mockData.rounds = { data: [currentRound, pastRound], error: null };
     mockData.songs = { data: [song], error: null };
     mockData.votes = { data: votes, error: null };
 
@@ -187,16 +190,17 @@ describe('useLeaderboard', () => {
     expect(result.current.members[0].avgReceived).toBe(3); // (4 + 2) / 2
   });
 
-  it('should count songsAdded per member', async () => {
+  it('should count songsAdded per member (completed rounds only)', async () => {
     const alice = makeMember({ id: 'alice' });
-    const currentRound = makeRound({ id: 'round-1', number: 1 });
+    const pastRound = makeRound({ id: 'round-1', number: 1 });
+    const currentRound = makeRound({ id: 'round-2', number: 2 });
     const songs = [
       makeSong({ id: 'song-1', member_id: 'alice', round_id: 'round-1' }),
       makeSong({ id: 'song-2', member_id: 'alice', round_id: 'round-1' }),
     ];
 
     mockData.members = { data: [alice], error: null };
-    mockData.rounds = { data: [currentRound], error: null };
+    mockData.rounds = { data: [currentRound, pastRound], error: null };
     mockData.songs = { data: songs, error: null };
     mockData.votes = { data: [], error: null };
 
@@ -209,10 +213,11 @@ describe('useLeaderboard', () => {
     expect(result.current.members[0].songsAdded).toBe(2);
   });
 
-  it('should sort members by totalScore descending', async () => {
+  it('should sort members by totalScore descending (completed rounds only)', async () => {
     const alice = makeMember({ id: 'alice', name: 'Alice' });
     const bob = makeMember({ id: 'bob', name: 'Bob' });
-    const round = makeRound({ id: 'round-1', number: 1 });
+    const pastRound = makeRound({ id: 'round-1', number: 1 });
+    const currentRound = makeRound({ id: 'round-2', number: 2 });
     const songs = [
       makeSong({ id: 'song-a', member_id: 'alice', round_id: 'round-1' }),
       makeSong({ id: 'song-b', member_id: 'bob', round_id: 'round-1' }),
@@ -223,7 +228,7 @@ describe('useLeaderboard', () => {
     ];
 
     mockData.members = { data: [alice, bob], error: null };
-    mockData.rounds = { data: [round], error: null };
+    mockData.rounds = { data: [currentRound, pastRound], error: null };
     mockData.songs = { data: songs, error: null };
     mockData.votes = { data: votes, error: null };
 
@@ -320,6 +325,17 @@ describe('useLeaderboard', () => {
       topSong: 'Bohemian Rhapsody',
       topArtist: 'Queen',
       topScore: 4.5,
+      songs: [
+        {
+          id: 'song-a',
+          title: 'Bohemian Rhapsody',
+          artist: 'Queen',
+          thumbnail_url: null,
+          memberName: 'Alice',
+          avgRating: 4.5,
+          totalVotes: 1,
+        },
+      ],
     });
   });
 

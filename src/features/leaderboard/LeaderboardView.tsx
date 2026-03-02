@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/Button';
 import { useLeaderboard } from './useLeaderboard';
 import { Podium } from './Podium';
 import { PastRounds } from './PastRounds';
+import { TopSongs } from './TopSongs';
 
 interface LeaderboardViewProps {
   group: Group;
@@ -131,7 +132,7 @@ function ErrorState({
  * Shows podium, all-time rankings table, and past rounds history.
  */
 export function LeaderboardView({ group, locale }: LeaderboardViewProps) {
-  const { members, pastRounds, isLoading, error } = useLeaderboard(group.id);
+  const { members, pastRounds, topSongs, isLoading, error } = useLeaderboard(group.id);
 
   return (
     <div className="flex min-h-screen flex-col bg-bg">
@@ -145,6 +146,7 @@ export function LeaderboardView({ group, locale }: LeaderboardViewProps) {
         <>
           <Podium members={members} locale={locale} />
           <RankingsTable members={members} locale={locale} />
+          <TopSongs songs={topSongs} locale={locale} />
           <PastRounds rounds={pastRounds} locale={locale} />
         </>
       )}

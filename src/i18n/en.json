@@ -75,6 +75,8 @@
   "leaderboard.allTime": "All-time standings",
   "leaderboard.pastRounds": "Past rounds",
   "leaderboard.noPastRounds": "No past rounds yet",
+  "leaderboard.topSongs": "Top 5 songs of all time",
+  "leaderboard.noTopSongs": "No rated songs yet",
   "leaderboard.songs": "songs",
   "leaderboard.avg": "avg",
   "leaderboard.wins": "wins",
