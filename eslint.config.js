@@ -3,7 +3,7 @@ import tseslint from '@typescript-eslint/eslint-plugin';
 import tsparser from '@typescript-eslint/parser';
 
 export default [
-  { ignores: ['dist/**', '.astro/**', 'node_modules/**', 'prototype/**'] },
+  { ignores: ['dist/**', '.astro/**', 'node_modules/**', 'prototype/**', 'android/**'] },
   ...eslintPluginAstro.configs.recommended,
   {
     files: ['**/*.ts', '**/*.tsx'],
@@ -19,7 +19,7 @@ export default [
     },
     rules: {
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-      'no-console': 'warn',
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
     },
   },
 ];
