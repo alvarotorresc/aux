@@ -28,6 +28,7 @@ async function fetchTopTags(
 }
 
 export async function detectGenre(title: string, artist: string): Promise<string | null> {
+  // Server-side only: LASTFM_API_KEY is not exposed to the client (no PUBLIC_ prefix)
   const apiKey = import.meta.env.LASTFM_API_KEY ?? process.env.LASTFM_API_KEY ?? '';
   if (!apiKey) return null;
 

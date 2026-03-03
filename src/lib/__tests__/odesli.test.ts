@@ -1,10 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { resolveSongLink } from '../odesli';
 
-vi.mock('../lastfm', () => ({
-  detectGenre: vi.fn().mockResolvedValue('rock'),
-}));
-
 // Minimal valid Odesli API response for a Spotify track
 function makeOdesliResponse(
   overrides: Partial<{
@@ -12,12 +8,14 @@ function makeOdesliResponse(
     pageUrl: string;
     entitiesByUniqueId: Record<string, unknown>;
     linksByPlatform: Record<string, { entityUniqueId: string; url: string }>;
+    _detectedGenre: string | null;
   }> = {},
 ) {
   return {
     entityUniqueId: 'SPOTIFY_SONG::abc123',
     userCountry: 'US',
     pageUrl: 'https://song.link/s/abc123',
+    _detectedGenre: null,
     entitiesByUniqueId: {
       'SPOTIFY_SONG::abc123': {
         id: 'abc123',
@@ -213,19 +211,19 @@ describe('resolveSongLink', () => {
     expect(ytMusic!.url).toBe('https://music.youtube.com/watch?v=fJ9rUzIMcZQ');
   });
 
-  it('should include auto-detected genre from Last.fm', async () => {
-    const { detectGenre } = await import('../lastfm');
-    vi.mocked(detectGenre).mockResolvedValueOnce('electronic');
-    vi.mocked(fetch).mockResolvedValueOnce(makeOkResponse(makeOdesliResponse()));
+  it('should include genre from server-side _detectedGenre field', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      makeOkResponse(makeOdesliResponse({ _detectedGenre: 'electronic' })),
+    );
 
     const result = await resolveSongLink('https://open.spotify.com/track/abc');
     expect(result.genre).toBe('electronic');
   });
 
-  it('should return null genre when Last.fm detection fails', async () => {
-    const { detectGenre } = await import('../lastfm');
-    vi.mocked(detectGenre).mockRejectedValueOnce(new Error('API down'));
-    vi.mocked(fetch).mockResolvedValueOnce(makeOkResponse(makeOdesliResponse()));
+  it('should return null genre when _detectedGenre is absent', async () => {
+    const response = makeOdesliResponse();
+    delete (response as Record<string, unknown>)._detectedGenre;
+    vi.mocked(fetch).mockResolvedValueOnce(makeOkResponse(response));
 
     const result = await resolveSongLink('https://open.spotify.com/track/abc');
     expect(result.genre).toBeNull();

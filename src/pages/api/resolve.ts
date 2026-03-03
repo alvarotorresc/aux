@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { detectGenre } from '../../lib/lastfm';
 
 const ODESLI_API = 'https://api.song.link/v1-alpha.1/links';
 
@@ -60,10 +61,28 @@ export const GET: APIRoute = async ({ url }) => {
     const endpoint = `${ODESLI_API}?url=${encodeURIComponent(musicUrl)}`;
     const response = await fetch(endpoint);
 
-    const body = await response.text();
+    if (!response.ok) {
+      return new Response(await response.text(), {
+        status: response.status,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
 
-    return new Response(body, {
-      status: response.status,
+    const data = await response.json();
+
+    // Extract title and artist from the primary entity for genre detection
+    let genre: string | null = null;
+    try {
+      const primaryEntity = data.entitiesByUniqueId?.[data.entityUniqueId];
+      if (primaryEntity?.title && primaryEntity?.artistName) {
+        genre = await detectGenre(primaryEntity.title, primaryEntity.artistName);
+      }
+    } catch {
+      // Genre detection is best-effort
+    }
+
+    return new Response(JSON.stringify({ ...data, _detectedGenre: genre }), {
+      status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
   } catch {
