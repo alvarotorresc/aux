@@ -76,6 +76,8 @@
   "leaderboard.avg": "media",
   "leaderboard.wins": "victorias",
   "leaderboard.pts": "pts",
+  "leaderboard.genreFilter": "Filtrar por genero",
+  "leaderboard.allGenres": "Todos los generos",
   "leaderboard.fullLink": "Clasificacion completa",
   "footer.madeWith": "Hecho con",
   "footer.by": "por"

@@ -76,6 +76,8 @@
   "leaderboard.avg": "avg",
   "leaderboard.wins": "wins",
   "leaderboard.pts": "pts",
+  "leaderboard.genreFilter": "Filter by genre",
+  "leaderboard.allGenres": "All genres",
   "leaderboard.fullLink": "Full leaderboard",
   "footer.madeWith": "Made with",
   "footer.by": "by"

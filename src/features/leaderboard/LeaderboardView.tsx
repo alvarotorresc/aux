@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import type { Locale } from '../../../site.config';
 import type { Group, MemberStats } from '../../lib/types';
 import { t } from '../../i18n';
 import { Button } from '../../components/ui/Button';
+import { GenreFilter } from '../../components/ui/GenreFilter';
 import { useLeaderboard } from './useLeaderboard';
 import { Podium } from './Podium';
 import { PastRounds } from './PastRounds';
@@ -132,6 +134,11 @@ function ErrorState({
  */
 export function LeaderboardView({ group, locale }: LeaderboardViewProps) {
   const { members, pastRounds, isLoading, error } = useLeaderboard(group.id);
+  const [genreFilter, setGenreFilter] = useState<string | null>(null);
+
+  const filteredPastRounds = genreFilter
+    ? pastRounds.filter((r) => r.topGenre === genreFilter)
+    : pastRounds;
 
   return (
     <div className="flex min-h-screen flex-col bg-bg">
@@ -145,7 +152,10 @@ export function LeaderboardView({ group, locale }: LeaderboardViewProps) {
         <>
           <Podium members={members} locale={locale} />
           <RankingsTable members={members} locale={locale} />
-          <PastRounds rounds={pastRounds} locale={locale} />
+          <div className="px-5 pt-2">
+            <GenreFilter value={genreFilter} onChange={setGenreFilter} locale={locale} />
+          </div>
+          <PastRounds rounds={filteredPastRounds} locale={locale} />
         </>
       )}
     </div>
