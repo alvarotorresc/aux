@@ -1,6 +1,7 @@
 import type { Locale } from '../../../site.config';
 import type { PastRound } from './useLeaderboard';
 import { t } from '../../i18n';
+import { GenreBadge } from '../../components/ui/GenreBadge';
 
 interface PastRoundsProps {
   rounds: PastRound[];
@@ -35,6 +36,11 @@ export function PastRounds({ rounds, locale }: PastRoundsProps) {
                 <p className="mt-0.5 truncate text-[13px] text-text-secondary">
                   {round.topSong} — {round.topArtist}
                 </p>
+                {round.topGenre && (
+                  <div className="mt-0.5">
+                    <GenreBadge genre={round.topGenre} />
+                  </div>
+                )}
               </div>
 
               {/* Right: winner + score */}
