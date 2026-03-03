@@ -29,6 +29,7 @@ function LeaderboardNav({
   locale: Locale;
 }) {
   const backUrl = locale === 'es' ? `/es/g/${slug}` : `/g/${slug}`;
+  const wrappedUrl = locale === 'es' ? `/es/g/${slug}/wrapped` : `/g/${slug}/wrapped`;
 
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between border-b border-border bg-bg px-5 py-4">
@@ -50,7 +51,15 @@ function LeaderboardNav({
         </a>
         <h1 className="text-lg font-bold text-text">{t('leaderboard.title', locale)}</h1>
       </div>
-      <span className="text-sm text-text-secondary">{groupName}</span>
+      <div className="flex items-center gap-3">
+        <a
+          href={wrappedUrl}
+          className="rounded-lg bg-accent/10 px-3 py-1.5 text-xs font-semibold text-accent transition-colors hover:bg-accent/20"
+        >
+          {t('wrapped.title', locale)}
+        </a>
+        <span className="text-sm text-text-secondary">{groupName}</span>
+      </div>
     </nav>
   );
 }
