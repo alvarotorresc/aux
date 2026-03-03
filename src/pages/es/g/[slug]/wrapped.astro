@@ -1,0 +1,35 @@
+---
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import Navbar from '../../../../components/Navbar.astro';
+import Footer from '../../../../components/Footer.astro';
+import { WrappedView } from '../../../../features/wrapped/WrappedView';
+import { supabase } from '../../../../lib/supabase';
+import { t } from '../../../../i18n';
+import type { Group } from '../../../../lib/types';
+
+const { slug } = Astro.params;
+
+if (!slug) {
+  return Astro.redirect('/es');
+}
+
+const { data: group, error: groupError } = await supabase
+  .from('groups')
+  .select('*')
+  .eq('slug', slug)
+  .maybeSingle();
+
+if (groupError || !group) {
+  return Astro.redirect('/404');
+}
+
+const typedGroup = group as Group;
+---
+
+<BaseLayout title={`${t('wrapped.title', 'es')} — ${typedGroup.name}`} locale="es">
+  <Navbar />
+  <main>
+    <WrappedView client:load group={typedGroup} locale="es" />
+  </main>
+  <Footer locale="es" />
+</BaseLayout>
