@@ -36,6 +36,7 @@ export interface Song {
   thumbnail_url: string | null;
   platform_links: { platform: string; url: string }[];
   odesli_page_url: string | null;
+  genre: string | null;
   created_at: string;
 }
 

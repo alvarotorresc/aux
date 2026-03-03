@@ -37,9 +37,9 @@ function makeSong(overrides: Partial<Song> = {}): Song {
     artist: 'Test Artist',
     album: null,
     thumbnail_url: null,
-    spotify_url: null,
-    youtube_url: null,
+    platform_links: [],
     odesli_page_url: null,
+    genre: null,
     created_at: '2026-01-01T00:00:00Z',
     ...overrides,
   };
