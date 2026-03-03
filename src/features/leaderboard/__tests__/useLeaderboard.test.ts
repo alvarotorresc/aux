@@ -92,6 +92,7 @@ function makeSong(overrides: Partial<Song> = {}): Song {
     thumbnail_url: null,
     platform_links: [],
     odesli_page_url: null,
+    genre: null,
     created_at: '2026-01-01T00:00:00Z',
     ...overrides,
   };
@@ -324,6 +325,7 @@ describe('useLeaderboard', () => {
       winner: 'Alice',
       topSong: 'Bohemian Rhapsody',
       topArtist: 'Queen',
+      topGenre: null,
       topScore: 4.5,
       songs: [
         {

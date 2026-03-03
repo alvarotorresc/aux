@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { createRateLimiter } from '../../lib/rate-limiter';
+import { detectGenre } from '../../lib/lastfm';
 
 const ODESLI_API = 'https://api.song.link/v1-alpha.1/links';
 
@@ -102,8 +103,39 @@ export const GET: APIRoute = async ({ url, request }) => {
       });
     }
 
-    return new Response(body, {
-      status: response.status,
+    if (!response.ok) {
+      return new Response(body, {
+        status: response.status,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Parse response and detect genre server-side (Last.fm API key is not exposed to client)
+    let data: Record<string, unknown>;
+    try {
+      data = JSON.parse(body);
+    } catch {
+      return new Response(body, {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    let genre: string | null = null;
+    try {
+      const entities = data.entitiesByUniqueId as
+        | Record<string, Record<string, string>>
+        | undefined;
+      const primaryEntity = entities?.[data.entityUniqueId as string];
+      if (primaryEntity?.title && primaryEntity?.artistName) {
+        genre = await detectGenre(primaryEntity.title, primaryEntity.artistName);
+      }
+    } catch {
+      // Genre detection is best-effort
+    }
+
+    return new Response(JSON.stringify({ ...data, _detectedGenre: genre }), {
+      status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
   } catch {

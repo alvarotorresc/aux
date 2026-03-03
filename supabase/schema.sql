@@ -43,6 +43,7 @@ create table songs (
   thumbnail_url text check (thumbnail_url is null or thumbnail_url ~ '^https://'),
   platform_links jsonb not null default '[]',
   odesli_page_url text check (odesli_page_url is null or odesli_page_url ~ '^https://'),
+  genre text check (genre is null or char_length(genre) <= 30),
   created_at timestamptz default now()
 );
 

@@ -57,6 +57,7 @@ export interface ResolvedSong {
   title: string;
   artist: string;
   album: string | null;
+  genre: string | null;
   thumbnailUrl: string | null;
   platformLinks: PlatformLink[];
   pageUrl: string;
@@ -173,10 +174,15 @@ export async function resolveSongLink(url: string): Promise<ResolvedSong> {
     throw new Error('Invalid page URL returned by song resolution service.');
   }
 
+  // Genre is detected server-side in /api/resolve and passed as _detectedGenre
+  const genre: string | null =
+    ((data as unknown as Record<string, unknown>)._detectedGenre as string | null) ?? null;
+
   return {
     title,
     artist,
     album: null,
+    genre,
     thumbnailUrl,
     platformLinks,
     pageUrl,

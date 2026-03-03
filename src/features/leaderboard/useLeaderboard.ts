@@ -17,6 +17,7 @@ export interface PastRound {
   winner: string;
   topSong: string;
   topArtist: string;
+  topGenre: string | null;
   topScore: number;
   songs: PastRoundSong[];
 }
@@ -230,6 +231,7 @@ export function useLeaderboard(groupId: string): UseLeaderboardResult {
           winner: winnerMember?.name ?? '—',
           topSong: winner?.topSong.title ?? roundSongData[0]?.title ?? '—',
           topArtist: winner?.topSong.artist ?? roundSongData[0]?.artist ?? '—',
+          topGenre: winner?.topSong.genre ?? null,
           topScore: winner?.topScore ?? 0,
           songs: roundSongData,
         });

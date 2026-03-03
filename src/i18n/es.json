@@ -58,6 +58,8 @@
   "group.addSong.placeholder": "Pega un enlace de Spotify o YouTube...",
   "group.addSong.button": "Anadir",
   "group.addSong.resolving": "Resolviendo...",
+  "group.addSong.genreLabel": "Género",
+  "group.addSong.genrePlaceholder": "Género (opcional)",
   "group.addSong.error": "No se pudo resolver ese enlace. Prueba con otro.",
   "group.songCard.addedBy": "Anadida por",
   "group.songCard.yourTrack": "Tu cancion",
@@ -84,6 +86,8 @@
   "leaderboard.avg": "media",
   "leaderboard.wins": "victorias",
   "leaderboard.pts": "pts",
+  "leaderboard.genreFilter": "Filtrar por genero",
+  "leaderboard.allGenres": "Todos los generos",
   "leaderboard.fullLink": "Clasificacion completa",
   "footer.madeWith": "Hecho con",
   "footer.by": "por"

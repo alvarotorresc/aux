@@ -39,6 +39,7 @@ function makeSong(overrides: Partial<Song> = {}): Song {
     thumbnail_url: null,
     platform_links: [],
     odesli_page_url: null,
+    genre: null,
     created_at: '2026-01-01T00:00:00Z',
     ...overrides,
   };

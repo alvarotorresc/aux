@@ -3,6 +3,7 @@ import type { Member, SongWithVotes } from '../../lib/types';
 import { t } from '../../i18n';
 import { StarRating } from '../../components/ui/StarRating';
 import { PlatformLinks } from '../../components/ui/PlatformLinks';
+import { GenreBadge } from '../../components/ui/GenreBadge';
 
 interface SongCardProps {
   song: SongWithVotes;
@@ -71,6 +72,12 @@ export function SongCard({ song, memberId, members, onRate, locale }: SongCardPr
         {/* Title + artist */}
         <h3 className="truncate text-base font-semibold text-text">{song.title}</h3>
         <p className="mb-2 truncate text-sm text-text-secondary">{song.artist}</p>
+
+        {song.genre && (
+          <div className="mb-1.5">
+            <GenreBadge genre={song.genre} />
+          </div>
+        )}
 
         {/* Added by */}
         <p className="mb-2.5 text-xs text-text-tertiary">

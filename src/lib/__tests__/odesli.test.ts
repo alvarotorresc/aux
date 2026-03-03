@@ -8,12 +8,14 @@ function makeOdesliResponse(
     pageUrl: string;
     entitiesByUniqueId: Record<string, unknown>;
     linksByPlatform: Record<string, { entityUniqueId: string; url: string }>;
+    _detectedGenre: string | null;
   }> = {},
 ) {
   return {
     entityUniqueId: 'SPOTIFY_SONG::abc123',
     userCountry: 'US',
     pageUrl: 'https://song.link/s/abc123',
+    _detectedGenre: null,
     entitiesByUniqueId: {
       'SPOTIFY_SONG::abc123': {
         id: 'abc123',
@@ -207,5 +209,23 @@ describe('resolveSongLink', () => {
     const ytMusic = result.platformLinks.find((l) => l.platform === 'youtubeMusic');
     expect(ytMusic).toBeDefined();
     expect(ytMusic!.url).toBe('https://music.youtube.com/watch?v=fJ9rUzIMcZQ');
+  });
+
+  it('should include genre from server-side _detectedGenre field', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      makeOkResponse(makeOdesliResponse({ _detectedGenre: 'electronic' })),
+    );
+
+    const result = await resolveSongLink('https://open.spotify.com/track/abc');
+    expect(result.genre).toBe('electronic');
+  });
+
+  it('should return null genre when _detectedGenre is absent', async () => {
+    const response = makeOdesliResponse();
+    delete (response as Record<string, unknown>)._detectedGenre;
+    vi.mocked(fetch).mockResolvedValueOnce(makeOkResponse(response));
+
+    const result = await resolveSongLink('https://open.spotify.com/track/abc');
+    expect(result.genre).toBeNull();
   });
 });

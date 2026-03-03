@@ -4,10 +4,10 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { AddSong } from '../AddSong';
 
 describe('AddSong', () => {
-  let mockOnAddSong: ReturnType<typeof vi.fn<(url: string) => Promise<void>>>;
+  let mockOnAddSong: ReturnType<typeof vi.fn<(url: string, genre: string | null) => Promise<void>>>;
 
   beforeEach(() => {
-    mockOnAddSong = vi.fn<(url: string) => Promise<void>>();
+    mockOnAddSong = vi.fn<(url: string, genre: string | null) => Promise<void>>();
   });
 
   it('should render input and submit button', () => {
@@ -34,7 +34,7 @@ describe('AddSong', () => {
     expect(button.hasAttribute('disabled')).toBe(false);
   });
 
-  it('should call onAddSong with trimmed URL on submit', async () => {
+  it('should call onAddSong with trimmed URL and null genre on submit', async () => {
     mockOnAddSong.mockResolvedValue(undefined);
     render(<AddSong onAddSong={mockOnAddSong} locale="en" />);
 
@@ -45,7 +45,7 @@ describe('AddSong', () => {
     fireEvent.submit(form);
 
     await waitFor(() => {
-      expect(mockOnAddSong).toHaveBeenCalledWith('https://open.spotify.com/track/abc');
+      expect(mockOnAddSong).toHaveBeenCalledWith('https://open.spotify.com/track/abc', null);
     });
   });
 
@@ -161,5 +161,48 @@ describe('AddSong', () => {
     fireEvent.submit(form);
 
     expect(mockOnAddSong).not.toHaveBeenCalled();
+  });
+
+  it('should render genre select dropdown', () => {
+    render(<AddSong onAddSong={mockOnAddSong} locale="en" />);
+
+    const select = screen.getByRole('combobox', { name: 'Genre' });
+    expect(select).toBeDefined();
+  });
+
+  it('should call onAddSong with selected genre on submit', async () => {
+    mockOnAddSong.mockResolvedValue(undefined);
+    render(<AddSong onAddSong={mockOnAddSong} locale="en" />);
+
+    const input = screen.getByPlaceholderText('Paste a Spotify or YouTube link...');
+    fireEvent.change(input, { target: { value: 'https://open.spotify.com/track/abc' } });
+
+    const select = screen.getByRole('combobox', { name: 'Genre' });
+    fireEvent.change(select, { target: { value: 'rock' } });
+
+    const form = input.closest('form')!;
+    fireEvent.submit(form);
+
+    await waitFor(() => {
+      expect(mockOnAddSong).toHaveBeenCalledWith('https://open.spotify.com/track/abc', 'rock');
+    });
+  });
+
+  it('should reset genre select after successful submission', async () => {
+    mockOnAddSong.mockResolvedValue(undefined);
+    render(<AddSong onAddSong={mockOnAddSong} locale="en" />);
+
+    const input = screen.getByPlaceholderText('Paste a Spotify or YouTube link...');
+    fireEvent.change(input, { target: { value: 'https://open.spotify.com/track/abc' } });
+
+    const select = screen.getByRole('combobox', { name: 'Genre' }) as HTMLSelectElement;
+    fireEvent.change(select, { target: { value: 'rock' } });
+
+    const form = input.closest('form')!;
+    fireEvent.submit(form);
+
+    await waitFor(() => {
+      expect(select.value).toBe('');
+    });
   });
 });

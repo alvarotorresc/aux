@@ -17,6 +17,7 @@ function makeSong(overrides: Partial<SongWithVotes> = {}): SongWithVotes {
     thumbnail_url: 'https://i.scdn.co/image/abc',
     platform_links: [{ platform: 'spotify', url: 'https://open.spotify.com/track/abc' }],
     odesli_page_url: 'https://song.link/s/abc',
+    genre: null,
     created_at: '2026-01-01T00:00:00Z',
     votes: [],
     avgRating: 0,
@@ -169,5 +170,18 @@ describe('SongCard', () => {
 
     const img = screen.getByRole('img');
     expect(img.getAttribute('alt')).toBe('Bohemian Rhapsody cover');
+  });
+
+  it('should display genre badge when song has a genre', () => {
+    const song = makeSong({ genre: 'rock' });
+    render(<SongCard song={song} {...defaultProps} />);
+    expect(screen.getByText('Rock')).toBeDefined();
+  });
+
+  it('should not display genre badge when song genre is null', () => {
+    const song = makeSong({ genre: null });
+    render(<SongCard song={song} {...defaultProps} />);
+    expect(screen.queryByText('Rock')).toBeNull();
+    expect(screen.queryByText('Pop')).toBeNull();
   });
 });
