@@ -2,7 +2,15 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { ensureCurrentRound } from '../../lib/rounds';
 import { resolveSongLink } from '../../lib/odesli';
+import { GENRES } from '../../lib/genres';
 import type { Member, Round, Song, Vote, SongWithVotes } from '../../lib/types';
+
+const VALID_GENRES = new Set<string>(GENRES);
+
+function validateGenre(genre: string | null): string | null {
+  if (!genre) return null;
+  return VALID_GENRES.has(genre) ? genre : null;
+}
 
 interface UseGroupResult {
   round: Round | null;
@@ -179,7 +187,7 @@ export function useGroup(
           thumbnail_url: resolved.thumbnailUrl,
           platform_links: resolved.platformLinks,
           odesli_page_url: resolved.pageUrl,
-          genre: genre ?? resolved.genre,
+          genre: validateGenre(genre ?? resolved.genre),
         })
         .select()
         .single();
