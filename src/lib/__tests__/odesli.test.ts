@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { resolveSongLink } from '../odesli';
 
+vi.mock('../lastfm', () => ({
+  detectGenre: vi.fn().mockResolvedValue('rock'),
+}));
+
 // Minimal valid Odesli API response for a Spotify track
 function makeOdesliResponse(
   overrides: Partial<{
@@ -207,5 +211,23 @@ describe('resolveSongLink', () => {
     const ytMusic = result.platformLinks.find((l) => l.platform === 'youtubeMusic');
     expect(ytMusic).toBeDefined();
     expect(ytMusic!.url).toBe('https://music.youtube.com/watch?v=fJ9rUzIMcZQ');
+  });
+
+  it('should include auto-detected genre from Last.fm', async () => {
+    const { detectGenre } = await import('../lastfm');
+    vi.mocked(detectGenre).mockResolvedValueOnce('electronic');
+    vi.mocked(fetch).mockResolvedValueOnce(makeOkResponse(makeOdesliResponse()));
+
+    const result = await resolveSongLink('https://open.spotify.com/track/abc');
+    expect(result.genre).toBe('electronic');
+  });
+
+  it('should return null genre when Last.fm detection fails', async () => {
+    const { detectGenre } = await import('../lastfm');
+    vi.mocked(detectGenre).mockRejectedValueOnce(new Error('API down'));
+    vi.mocked(fetch).mockResolvedValueOnce(makeOkResponse(makeOdesliResponse()));
+
+    const result = await resolveSongLink('https://open.spotify.com/track/abc');
+    expect(result.genre).toBeNull();
   });
 });

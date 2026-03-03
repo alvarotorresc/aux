@@ -1,5 +1,7 @@
 /** Odesli (song.link) API wrapper — resolves music URLs to cross-platform data */
 
+import { detectGenre } from './lastfm';
+
 /** Use our own server-side proxy to avoid CORS issues with the Odesli API */
 const RESOLVE_API = '/api/resolve';
 
@@ -57,6 +59,7 @@ export interface ResolvedSong {
   title: string;
   artist: string;
   album: string | null;
+  genre: string | null;
   thumbnailUrl: string | null;
   platformLinks: PlatformLink[];
   pageUrl: string;
@@ -173,10 +176,18 @@ export async function resolveSongLink(url: string): Promise<ResolvedSong> {
     throw new Error('Invalid page URL returned by song resolution service.');
   }
 
+  let genre: string | null = null;
+  try {
+    genre = await detectGenre(title, artist);
+  } catch {
+    // Genre detection is best-effort — never fail the full resolution
+  }
+
   return {
     title,
     artist,
     album: null,
+    genre,
     thumbnailUrl,
     platformLinks,
     pageUrl,
