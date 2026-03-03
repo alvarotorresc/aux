@@ -110,10 +110,60 @@ const TAG_ALIASES: Record<string, Genre> = {
   'hard rock': 'rock',
   'progressive rock': 'rock',
   'psychedelic rock': 'rock',
+  'garage rock': 'rock',
   'blues rock': 'blues',
   'folk rock': 'folk',
   acoustic: 'folk',
   'singer-songwriter': 'folk',
+  'indie folk': 'folk',
+  'synth-pop': 'pop',
+  electropop: 'pop',
+  'dream pop': 'pop',
+  'power pop': 'pop',
+  'art pop': 'pop',
+  'k-pop': 'pop',
+  'j-pop': 'pop',
+  'latin pop': 'latin',
+  'latin rock': 'latin',
+  flamenco: 'latin',
+  tango: 'latin',
+  'smooth jazz': 'jazz',
+  'acid jazz': 'jazz',
+  'jazz fusion': 'jazz',
+  'nu jazz': 'jazz',
+  'delta blues': 'blues',
+  'chicago blues': 'blues',
+  'electric blues': 'blues',
+  'neo-soul': 'soul',
+  'southern soul': 'soul',
+  'psychedelic soul': 'soul',
+  afrobeat: 'funk',
+  'g-funk': 'funk',
+  disco: 'funk',
+  'post-rock': 'rock',
+  shoegaze: 'alternative',
+  britpop: 'alternative',
+  'new wave': 'alternative',
+  ambient: 'electronic',
+  industrial: 'electronic',
+  electronica: 'electronic',
+  downtempo: 'electronic',
+  metalcore: 'metal',
+  'doom metal': 'metal',
+  'power metal': 'metal',
+  'folk metal': 'metal',
+  'symphonic metal': 'metal',
+  'ska punk': 'punk',
+  emo: 'punk',
+  dub: 'reggae',
+  dancehall: 'reggae',
+  ska: 'reggae',
+  'roots reggae': 'reggae',
+  gospel: 'soul',
+  'country rock': 'country',
+  bluegrass: 'country',
+  americana: 'country',
+  'outlaw country': 'country',
 };
 
 const genreSet = new Set<string>(GENRES);
@@ -136,11 +186,6 @@ export function matchGenre(tags: string[]): Genre | null {
 
     // 2. Check exact match against GENRES
     if (genreSet.has(normalized)) return normalized as Genre;
-
-    // 3. Check if tag contains a genre slug as substring
-    for (const genre of GENRES) {
-      if (normalized.includes(genre)) return genre;
-    }
   }
 
   return null;
