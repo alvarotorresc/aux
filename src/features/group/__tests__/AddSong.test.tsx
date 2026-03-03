@@ -166,7 +166,7 @@ describe('AddSong', () => {
   it('should render genre select dropdown', () => {
     render(<AddSong onAddSong={mockOnAddSong} locale="en" />);
 
-    const select = screen.getByRole('combobox', { name: 'Genre (optional)' });
+    const select = screen.getByRole('combobox', { name: 'Genre' });
     expect(select).toBeDefined();
   });
 
@@ -177,7 +177,7 @@ describe('AddSong', () => {
     const input = screen.getByPlaceholderText('Paste a Spotify or YouTube link...');
     fireEvent.change(input, { target: { value: 'https://open.spotify.com/track/abc' } });
 
-    const select = screen.getByRole('combobox', { name: 'Genre (optional)' });
+    const select = screen.getByRole('combobox', { name: 'Genre' });
     fireEvent.change(select, { target: { value: 'rock' } });
 
     const form = input.closest('form')!;
@@ -195,7 +195,7 @@ describe('AddSong', () => {
     const input = screen.getByPlaceholderText('Paste a Spotify or YouTube link...');
     fireEvent.change(input, { target: { value: 'https://open.spotify.com/track/abc' } });
 
-    const select = screen.getByRole('combobox', { name: 'Genre (optional)' }) as HTMLSelectElement;
+    const select = screen.getByRole('combobox', { name: 'Genre' }) as HTMLSelectElement;
     fireEvent.change(select, { target: { value: 'rock' } });
 
     const form = input.closest('form')!;
