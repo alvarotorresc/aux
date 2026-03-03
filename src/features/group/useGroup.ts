@@ -10,7 +10,7 @@ interface UseGroupResult {
   members: Member[];
   isLoading: boolean;
   error: string | null;
-  addSong: (url: string) => Promise<void>;
+  addSong: (url: string, genre?: string | null) => Promise<void>;
   voteSong: (songId: string, rating: number) => Promise<void>;
   refetch: () => Promise<void>;
 }
@@ -151,7 +151,7 @@ export function useGroup(
 
   /** Add a new song by resolving the URL via Odesli and inserting into Supabase */
   const addSong = useCallback(
-    async (url: string) => {
+    async (url: string, genre: string | null = null) => {
       if (!round || !memberId) {
         throw new Error('Cannot add song: no active round or member');
       }
@@ -179,6 +179,7 @@ export function useGroup(
           thumbnail_url: resolved.thumbnailUrl,
           platform_links: resolved.platformLinks,
           odesli_page_url: resolved.pageUrl,
+          genre: genre ?? resolved.genre,
         })
         .select()
         .single();
