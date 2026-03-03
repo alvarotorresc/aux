@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom/vitest';
 import { SongCard } from '../SongCard';
 import type { Member, SongWithVotes } from '../../../lib/types';
 
@@ -43,10 +44,23 @@ const defaultProps = {
 };
 
 describe('SongCard', () => {
+  it('should render song title and artist', () => {
+    const song = makeSong();
+    render(<SongCard song={song} {...defaultProps} />);
+    expect(screen.getByText('Test Song')).toBeInTheDocument();
+    expect(screen.getByText('Test Artist')).toBeInTheDocument();
+  });
+
+  it('should show "Your track" when song belongs to current member', () => {
+    const song = makeSong({ member_id: 'member-2' });
+    render(<SongCard song={song} {...defaultProps} />);
+    expect(screen.getByText('Your track')).toBeInTheDocument();
+  });
+
   it('should display genre badge when song has a genre', () => {
     const song = makeSong({ genre: 'rock' });
     render(<SongCard song={song} {...defaultProps} />);
-    expect(screen.getByText('Rock')).toBeDefined();
+    expect(screen.getByText('Rock')).toBeInTheDocument();
   });
 
   it('should not display genre badge when song genre is null', () => {

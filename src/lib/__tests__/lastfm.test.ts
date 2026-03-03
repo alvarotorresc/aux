@@ -137,17 +137,16 @@ describe('detectGenre', () => {
     expect(result).toBeNull();
   });
 
-  it('should match hip-hop variants from Last.fm tags', async () => {
-    const mockFetch = vi.mocked(fetch);
-    const variants = ['Hip-Hop', 'hip hop', 'rap', 'Rap', 'Hip Hop'];
-
-    for (const variant of variants) {
+  it.each(['Hip-Hop', 'hip hop', 'rap', 'Rap', 'Hip Hop'])(
+    'should match "%s" as hip-hop',
+    async (variant) => {
+      const mockFetch = vi.mocked(fetch);
       mockFetch.mockResolvedValueOnce(makeTagResponse([{ name: variant, count: 100 }]));
 
       const result = await detectGenre('Track', 'Artist');
       expect(result).toBe('hip-hop');
-    }
-  });
+    },
+  );
 
   it('should return null when API key is not set', async () => {
     vi.stubEnv('LASTFM_API_KEY', '');

@@ -4,6 +4,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { AddSong } from '../AddSong';
+import { GENRES } from '../../../lib/genres';
 
 const VALID_URL = 'https://open.spotify.com/track/123';
 
@@ -28,8 +29,7 @@ describe('AddSong', () => {
 
     // Should have genre options plus the empty placeholder
     const options = screen.getAllByRole('option');
-    // 19 genres + 1 placeholder = 20
-    expect(options.length).toBe(20);
+    expect(options.length).toBe(GENRES.length + 1); // genres + placeholder
   });
 
   it('should disable submit when URL is empty', () => {
