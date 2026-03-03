@@ -55,6 +55,8 @@
   "group.addSong.placeholder": "Paste a Spotify or YouTube link...",
   "group.addSong.button": "Add",
   "group.addSong.resolving": "Resolving...",
+  "group.addSong.genreLabel": "Genre",
+  "group.addSong.genrePlaceholder": "Genre (optional)",
   "group.addSong.error": "Could not resolve that link. Try another.",
   "group.songCard.addedBy": "Added by",
   "group.songCard.yourTrack": "Your track",

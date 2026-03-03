@@ -55,6 +55,8 @@
   "group.addSong.placeholder": "Pega un enlace de Spotify o YouTube...",
   "group.addSong.button": "Anadir",
   "group.addSong.resolving": "Resolviendo...",
+  "group.addSong.genreLabel": "Género",
+  "group.addSong.genrePlaceholder": "Género (opcional)",
   "group.addSong.error": "No se pudo resolver ese enlace. Prueba con otro.",
   "group.songCard.addedBy": "Anadida por",
   "group.songCard.yourTrack": "Tu cancion",
