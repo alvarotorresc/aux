@@ -19,7 +19,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 <html lang={locale}>
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="generator" content={Astro.generator} />
     <meta name="description" content={description} />
     <meta name="author" content="Alvaro Torres" />
@@ -44,6 +44,11 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
           document.documentElement.classList.add('light');
         }
       })();
+    </script>
+    <script>
+      if ('Capacitor' in window) {
+        import('../lib/capacitor').then((m) => m.initCapacitor());
+      }
     </script>
   </body>
 </html>

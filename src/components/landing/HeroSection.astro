@@ -1,6 +1,7 @@
 ---
 import { t } from '../../i18n';
-import { Button } from '../ui/Button';
+import { JoinByCode } from './JoinByCode';
+import { MyGroups } from './MyGroups';
 import type { Locale } from '../../../site.config';
 
 interface Props {
@@ -42,5 +43,10 @@ const { locale = 'en' } = Astro.props;
     {t('hero.cta', locale)}
   </a>
 
-  {/* Users join via the group invite link — no standalone join page */}
+  {/* Join by code */}
+  <p class="mt-6 text-sm text-text-tertiary">{t('hero.joinText', locale)}</p>
+  <JoinByCode locale={locale} client:load />
+
+  {/* My groups */}
+  <MyGroups locale={locale} client:load />
 </section>

@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Locale } from '../../../site.config';
 import type { Group, Member } from '../../lib/types';
 import { t } from '../../i18n';
 import { Button } from '../../components/ui/Button';
+import { saveMyGroup } from '../../lib/storage';
 import { useMember } from '../../hooks/useMember';
 import { JoinGroup } from '../join/JoinGroup';
 import { useGroup } from './useGroup';
@@ -21,24 +22,23 @@ type Tab = 'songs' | 'ranking';
 
 // --- Sub-components ---
 
-function ShareButton({ locale }: { locale: Locale }) {
+function ShareButton({ slug, locale }: { slug: string; locale: Locale }) {
   const [copied, setCopied] = useState(false);
 
-  async function handleShare() {
-    const shareUrl = window.location.href.split('?')[0];
+  async function handleCopyCode() {
     try {
-      await navigator.clipboard.writeText(shareUrl);
+      await navigator.clipboard.writeText(slug);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
       if (navigator.share) {
-        navigator.share({ title: 'Aux', url: shareUrl });
+        navigator.share({ title: 'Aux', text: slug });
       }
     }
   }
 
   return (
-    <Button variant="secondary" size="sm" onClick={handleShare}>
+    <Button variant="secondary" size="sm" onClick={handleCopyCode}>
       {copied ? (
         <svg
           width="16"
@@ -67,14 +67,11 @@ function ShareButton({ locale }: { locale: Locale }) {
           className="sm:mr-1.5"
           aria-hidden="true"
         >
-          <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-          <polyline points="16 6 12 2 8 6" />
-          <line x1="12" x2="12" y1="2" y2="15" />
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
         </svg>
       )}
-      <span className="hidden sm:inline">
-        {copied ? t('group.copied', locale) : t('group.share', locale)}
-      </span>
+      <span className="hidden sm:inline">{copied ? t('group.copied', locale) : slug}</span>
     </Button>
   );
 }
@@ -113,7 +110,7 @@ function GroupNav({
           </div>
         </div>
       </div>
-      <ShareButton locale={locale} />
+      <ShareButton slug={group.slug} locale={locale} />
     </nav>
   );
 }
@@ -307,6 +304,12 @@ function GroupContent({
  */
 export function GroupView({ group, members, locale }: GroupViewProps) {
   const { member, isLoading } = useMember(group.slug);
+
+  useEffect(() => {
+    if (member) {
+      saveMyGroup(group.slug, group.name);
+    }
+  }, [member, group.slug, group.name]);
 
   if (isLoading) {
     return <LoadingSpinner />;

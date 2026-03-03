@@ -1,0 +1,15 @@
+<svg width="108" height="108" viewBox="0 0 108 108" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Adaptive icon safe zone: center 66x66 within 108x108 (25% padding each side = 27px) -->
+  <!-- Icon bounds in 32x32: x=12..20 (w=8), y=3..31 (h=28). Center: x=16, y=17 -->
+  <!-- Scale to fit 66 height: 66/28 = 2.36. Width = 8*2.36 = 18.9 -->
+  <!-- Offset: cx=54 - 16*2.36 = 16.24, cy=54 - 17*2.36 = 13.88 -->
+  <g transform="translate(16.24, 13.88) scale(2.36)">
+    <path d="M16 3C16 3 14 3 14 5V7H18V5C18 3 16 3 16 3Z" stroke="#D946EF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="13" y="7" width="6" height="2" rx="0.5" stroke="#D946EF" stroke-width="1.5"/>
+    <rect x="14" y="9" width="4" height="5" stroke="#D946EF" stroke-width="1.5"/>
+    <rect x="13" y="14" width="6" height="2" rx="0.5" stroke="#D946EF" stroke-width="1.5"/>
+    <rect x="14" y="16" width="4" height="6" stroke="#D946EF" stroke-width="1.5"/>
+    <path d="M12 22H20V26C20 28 18 29 16 29C14 29 12 28 12 26V22Z" stroke="#D946EF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M16 29V31" stroke="#D946EF" stroke-width="1.5" stroke-linecap="round"/>
+  </g>
+</svg>

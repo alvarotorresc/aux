@@ -27,3 +27,9 @@ prototype/node_modules/
 
 # Local Netlify folder
 .netlify
+
+# Capacitor
+android/app/build/
+android/.gradle/
+dist-capacitor/
+*.keystore

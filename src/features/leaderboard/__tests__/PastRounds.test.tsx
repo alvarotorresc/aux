@@ -13,6 +13,7 @@ const mockRounds: PastRound[] = [
     topArtist: 'Queen',
     topGenre: 'rock',
     topScore: 4.5,
+    songs: [],
   },
   {
     number: 2,
@@ -21,6 +22,7 @@ const mockRounds: PastRound[] = [
     topArtist: 'Miles Davis',
     topGenre: 'jazz',
     topScore: 3.8,
+    songs: [],
   },
   {
     number: 3,
@@ -29,6 +31,7 @@ const mockRounds: PastRound[] = [
     topArtist: 'Unknown',
     topGenre: null,
     topScore: 4.0,
+    songs: [],
   },
 ];
 
