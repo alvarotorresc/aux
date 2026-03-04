@@ -8,6 +8,11 @@ vi.mock('../../../lib/rate-limiter', () => ({
   createRateLimiter: () => ({ check: mockCheck, size: () => 0 }),
 }));
 
+const mockDetectGenre = vi.fn().mockResolvedValue(null);
+vi.mock('../../../lib/lastfm', () => ({
+  detectGenre: (...args: unknown[]) => mockDetectGenre(...args),
+}));
+
 // Import after mock setup
 const { GET } = await import('../resolve');
 
@@ -43,6 +48,8 @@ describe('GET /api/resolve', () => {
     vi.unstubAllGlobals();
     mockCheck.mockReset();
     mockCheck.mockReturnValue(true);
+    mockDetectGenre.mockReset();
+    mockDetectGenre.mockResolvedValue(null);
   });
 
   // --- Rate limiting ---
@@ -278,5 +285,150 @@ describe('GET /api/resolve', () => {
     const response = await GET(makeContext());
 
     expect(response.headers.get('Content-Type')).toBe('application/json');
+  });
+
+  // --- Non-JSON ok response (line 118) ---
+
+  it('should return raw body with 200 when Odesli returns non-JSON ok response', async () => {
+    const mockFetch = vi.mocked(fetch);
+    const nonJsonBody = '<html>some non-JSON response</html>';
+    mockFetch.mockResolvedValue(new Response(nonJsonBody, { status: 200 }));
+
+    const response = await GET(makeContext({ url: 'https://open.spotify.com/track/abc123' }));
+
+    expect(response.status).toBe(200);
+    const text = await response.text();
+    expect(text).toBe(nonJsonBody);
+  });
+
+  // --- Genre detection (line 131) ---
+
+  it('should call detectGenre when primaryEntity has title and artistName', async () => {
+    const mockFetch = vi.mocked(fetch);
+    const odesliBody = {
+      entityUniqueId: 'SPOTIFY_SONG::abc',
+      entitiesByUniqueId: {
+        'SPOTIFY_SONG::abc': {
+          title: 'Bohemian Rhapsody',
+          artistName: 'Queen',
+        },
+      },
+    };
+    mockFetch.mockResolvedValue(new Response(JSON.stringify(odesliBody), { status: 200 }));
+    mockDetectGenre.mockResolvedValue('rock');
+
+    const response = await GET(makeContext({ url: 'https://open.spotify.com/track/abc123' }));
+    const { status, body } = await parseResponse(response);
+
+    expect(status).toBe(200);
+    expect(mockDetectGenre).toHaveBeenCalledWith('Bohemian Rhapsody', 'Queen');
+    expect(body._detectedGenre).toBe('rock');
+  });
+
+  it('should set _detectedGenre to null when detectGenre returns null', async () => {
+    const mockFetch = vi.mocked(fetch);
+    const odesliBody = {
+      entityUniqueId: 'SPOTIFY_SONG::abc',
+      entitiesByUniqueId: {
+        'SPOTIFY_SONG::abc': {
+          title: 'Unknown Track',
+          artistName: 'Unknown Artist',
+        },
+      },
+    };
+    mockFetch.mockResolvedValue(new Response(JSON.stringify(odesliBody), { status: 200 }));
+    mockDetectGenre.mockResolvedValue(null);
+
+    const response = await GET(makeContext({ url: 'https://open.spotify.com/track/abc123' }));
+    const { body } = await parseResponse(response);
+
+    expect(body._detectedGenre).toBeNull();
+  });
+
+  it('should set _detectedGenre to null when detectGenre throws', async () => {
+    const mockFetch = vi.mocked(fetch);
+    const odesliBody = {
+      entityUniqueId: 'SPOTIFY_SONG::abc',
+      entitiesByUniqueId: {
+        'SPOTIFY_SONG::abc': {
+          title: 'Some Song',
+          artistName: 'Some Artist',
+        },
+      },
+    };
+    mockFetch.mockResolvedValue(new Response(JSON.stringify(odesliBody), { status: 200 }));
+    mockDetectGenre.mockRejectedValue(new Error('Last.fm down'));
+
+    const response = await GET(makeContext({ url: 'https://open.spotify.com/track/abc123' }));
+    const { body } = await parseResponse(response);
+
+    expect(body._detectedGenre).toBeNull();
+  });
+
+  it('should skip genre detection when primaryEntity has no title', async () => {
+    const mockFetch = vi.mocked(fetch);
+    const odesliBody = {
+      entityUniqueId: 'SPOTIFY_SONG::abc',
+      entitiesByUniqueId: {
+        'SPOTIFY_SONG::abc': {
+          artistName: 'Queen',
+        },
+      },
+    };
+    mockFetch.mockResolvedValue(new Response(JSON.stringify(odesliBody), { status: 200 }));
+
+    const response = await GET(makeContext({ url: 'https://open.spotify.com/track/abc123' }));
+    const { body } = await parseResponse(response);
+
+    expect(mockDetectGenre).not.toHaveBeenCalled();
+    expect(body._detectedGenre).toBeNull();
+  });
+
+  it('should skip genre detection when primaryEntity has no artistName', async () => {
+    const mockFetch = vi.mocked(fetch);
+    const odesliBody = {
+      entityUniqueId: 'SPOTIFY_SONG::abc',
+      entitiesByUniqueId: {
+        'SPOTIFY_SONG::abc': {
+          title: 'Bohemian Rhapsody',
+        },
+      },
+    };
+    mockFetch.mockResolvedValue(new Response(JSON.stringify(odesliBody), { status: 200 }));
+
+    const response = await GET(makeContext({ url: 'https://open.spotify.com/track/abc123' }));
+    const { body } = await parseResponse(response);
+
+    expect(mockDetectGenre).not.toHaveBeenCalled();
+    expect(body._detectedGenre).toBeNull();
+  });
+
+  it('should fall back to "unknown" when x-forwarded-for has empty first entry', async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValue(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+
+    // Empty first entry after split: ", 10.0.0.2" -> first = "" (trimmed)
+    await GET(
+      makeContext(
+        { url: 'https://open.spotify.com/track/abc123' },
+        { 'x-forwarded-for': ', 10.0.0.2' },
+      ),
+    );
+
+    expect(mockCheck).toHaveBeenCalledWith('unknown');
+  });
+
+  it('should skip genre detection when entitiesByUniqueId is missing', async () => {
+    const mockFetch = vi.mocked(fetch);
+    const odesliBody = {
+      entityUniqueId: 'SPOTIFY_SONG::abc',
+    };
+    mockFetch.mockResolvedValue(new Response(JSON.stringify(odesliBody), { status: 200 }));
+
+    const response = await GET(makeContext({ url: 'https://open.spotify.com/track/abc123' }));
+    const { body } = await parseResponse(response);
+
+    expect(mockDetectGenre).not.toHaveBeenCalled();
+    expect(body._detectedGenre).toBeNull();
   });
 });

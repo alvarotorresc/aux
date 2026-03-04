@@ -228,4 +228,119 @@ describe('resolveSongLink', () => {
     const result = await resolveSongLink('https://open.spotify.com/track/abc');
     expect(result.genre).toBeNull();
   });
+
+  it('should skip platform links with invalid URLs (safeHttpsUrl catch)', async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValue(
+      makeOkResponse(
+        makeOdesliResponse({
+          linksByPlatform: {
+            spotify: {
+              entityUniqueId: 'SPOTIFY_SONG::abc123',
+              url: 'not-a-valid-url',
+            },
+          },
+        }),
+      ),
+    );
+
+    const result = await resolveSongLink('https://open.spotify.com/track/abc123');
+
+    // The invalid URL should be skipped, fallback search link added instead
+    const spotify = result.platformLinks.find((l) => l.platform === 'spotify');
+    expect(spotify!.url).toContain('open.spotify.com/search/');
+  });
+
+  it('should throw when response.json() fails', async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.reject(new Error('JSON parse error')),
+    } as unknown as Response);
+
+    await expect(resolveSongLink('https://open.spotify.com/track/abc123')).rejects.toThrow(
+      'Invalid response from song resolution service.',
+    );
+  });
+
+  it('should throw when pageUrl is not a valid HTTPS URL', async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValue(
+      makeOkResponse(
+        makeOdesliResponse({
+          pageUrl: 'http://insecure.song.link/s/abc123',
+        }),
+      ),
+    );
+
+    await expect(resolveSongLink('https://open.spotify.com/track/abc123')).rejects.toThrow(
+      'Invalid page URL returned by song resolution service.',
+    );
+  });
+
+  it('should skip platform links with HTTP URLs', async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValue(
+      makeOkResponse(
+        makeOdesliResponse({
+          linksByPlatform: {
+            spotify: {
+              entityUniqueId: 'SPOTIFY_SONG::abc123',
+              url: 'http://insecure.spotify.com/track/abc',
+            },
+            youtubeMusic: {
+              entityUniqueId: 'YTM::abc123',
+              url: 'https://music.youtube.com/watch?v=abc',
+            },
+          },
+        }),
+      ),
+    );
+
+    const result = await resolveSongLink('https://open.spotify.com/track/abc123');
+
+    // HTTP spotify link should be skipped, HTTPS youtubeMusic should be kept
+    const ytm = result.platformLinks.find((l) => l.platform === 'youtubeMusic');
+    expect(ytm!.url).toBe('https://music.youtube.com/watch?v=abc');
+  });
+
+  it('should use "Unknown Title" when entity has no title', async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValue(
+      makeOkResponse(
+        makeOdesliResponse({
+          entitiesByUniqueId: {
+            'SPOTIFY_SONG::abc123': {
+              id: 'abc123',
+              type: 'song',
+              // no title or artistName
+              platforms: ['spotify'],
+            },
+          },
+        }),
+      ),
+    );
+
+    const result = await resolveSongLink('https://open.spotify.com/track/abc123');
+    expect(result.title).toBe('Unknown Title');
+    expect(result.artist).toBe('Unknown Artist');
+    expect(result.thumbnailUrl).toBeNull();
+  });
+
+  it('should trim whitespace from URL before processing', async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValue(makeOkResponse(makeOdesliResponse()));
+
+    await resolveSongLink('  https://open.spotify.com/track/abc123  ');
+
+    const calledUrl = mockFetch.mock.calls[0][0] as string;
+    expect(calledUrl).not.toContain('%20');
+  });
+
+  it('should throw when URL uses HTTP protocol', async () => {
+    await expect(resolveSongLink('http://open.spotify.com/track/abc')).rejects.toThrow(
+      'URL must use HTTPS',
+    );
+  });
 });

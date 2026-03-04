@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom/vitest';
 import { SongCard } from '../SongCard';
 import type { Member, SongWithVotes, Vote } from '../../../lib/types';
 
@@ -183,5 +184,25 @@ describe('SongCard', () => {
     render(<SongCard song={song} {...defaultProps} />);
     expect(screen.queryByText('Rock')).toBeNull();
     expect(screen.queryByText('Pop')).toBeNull();
+  });
+
+  it('should not render img when thumbnail_url is an invalid URL string', () => {
+    const song = makeSong({ thumbnail_url: 'not-a-url' });
+    render(<SongCard song={song} {...defaultProps} />);
+
+    expect(screen.queryByRole('img')).toBeNull();
+  });
+
+  it('should call onRate with song ID and rating when a star is clicked', () => {
+    const onRate = vi.fn();
+    const song = makeSong({ id: 'song-42', member_id: 'member-1' });
+
+    render(<SongCard song={song} {...defaultProps} memberId="member-2" onRate={onRate} />);
+
+    // Click the right half of the 4th star (= rating 4)
+    const star4Button = screen.getByRole('button', { name: '4 stars' });
+    fireEvent.click(star4Button);
+
+    expect(onRate).toHaveBeenCalledWith('song-42', 4);
   });
 });

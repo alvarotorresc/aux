@@ -188,4 +188,41 @@ describe('computeMemberStats', () => {
 
     expect(result).toEqual([]);
   });
+
+  it('should return 0 roundsWon when past round has empty songs array', () => {
+    const alice = makeMember({ id: 'alice' });
+    const currentRound = makeRound({ id: 'round-2', number: 2 });
+    const pastRound = makeRound({ id: 'round-1', number: 1 });
+    // No songs in the past round at all
+
+    const [stats] = computeMemberStats([alice], [currentRound, pastRound], [], []);
+
+    expect(stats.roundsWon).toBe(0);
+  });
+
+  it('should return 0 roundsWon when all songs in a past round have zero votes', () => {
+    const alice = makeMember({ id: 'alice' });
+    const currentRound = makeRound({ id: 'round-2', number: 2 });
+    const pastRound = makeRound({ id: 'round-1', number: 1 });
+    const song = makeSong({ id: 'song-1', member_id: 'alice', round_id: 'round-1' });
+    // No votes at all — every song has total === 0
+
+    const [stats] = computeMemberStats([alice], [currentRound, pastRound], [song], []);
+
+    expect(stats.roundsWon).toBe(0);
+  });
+
+  it('should return 0 roundsWon when winning song member does not exist in members list', () => {
+    const alice = makeMember({ id: 'alice' });
+    const currentRound = makeRound({ id: 'round-2', number: 2 });
+    const pastRound = makeRound({ id: 'round-1', number: 1 });
+    // Song belongs to 'ghost' who is NOT in the members array
+    const song = makeSong({ id: 'song-1', member_id: 'ghost', round_id: 'round-1' });
+    const votes = [makeVote({ id: 'v1', song_id: 'song-1', member_id: 'alice', rating: 5 })];
+
+    const [stats] = computeMemberStats([alice], [currentRound, pastRound], [song], votes);
+
+    // ghost would win but doesn't exist in members, so findRoundWinner returns null
+    expect(stats.roundsWon).toBe(0);
+  });
 });

@@ -30,6 +30,12 @@ vi.mock('../../../components/ui/Button', () => ({
   ),
 }));
 
+// --- Mock PlaylistCard ---
+
+vi.mock('../PlaylistCard', () => ({
+  PlaylistCard: () => <div data-testid="playlist-card">PlaylistCard</div>,
+}));
+
 // --- Mock IntersectionObserver ---
 
 class MockIntersectionObserver {
@@ -80,6 +86,8 @@ function makeStats(overrides: Partial<WrappedStats> = {}): WrappedStats {
       memberName: 'Alice',
       avgRating: 4.8,
       totalVotes: 5,
+      platform_links: [],
+      odesli_page_url: null,
     },
     topMembers: [
       {
@@ -111,6 +119,8 @@ function makeStats(overrides: Partial<WrappedStats> = {}): WrappedStats {
         memberName: 'Alice',
         avgRating: 4.8,
         totalVotes: 5,
+        platform_links: [],
+        odesli_page_url: null,
       },
       {
         id: 'song-2',
@@ -121,6 +131,34 @@ function makeStats(overrides: Partial<WrappedStats> = {}): WrappedStats {
         memberName: 'Bob',
         avgRating: 4.2,
         totalVotes: 4,
+        platform_links: [],
+        odesli_page_url: null,
+      },
+    ],
+    allSongs: [
+      {
+        id: 'song-1',
+        title: 'Best Song',
+        artist: 'Best Artist',
+        thumbnail_url: null,
+        genre: 'rock',
+        memberName: 'Alice',
+        avgRating: 4.8,
+        totalVotes: 5,
+        platform_links: [],
+        odesli_page_url: null,
+      },
+      {
+        id: 'song-2',
+        title: 'Second Song',
+        artist: 'Second Artist',
+        thumbnail_url: null,
+        genre: 'pop',
+        memberName: 'Bob',
+        avgRating: 4.2,
+        totalVotes: 4,
+        platform_links: [],
+        odesli_page_url: null,
       },
     ],
     genreDistribution: [
@@ -264,6 +302,8 @@ describe('WrappedView', () => {
           memberName: 'Alice',
           avgRating: 4.5,
           totalVotes: 3,
+          platform_links: [],
+          odesli_page_url: null,
         },
       }),
     };
@@ -301,5 +341,322 @@ describe('WrappedView', () => {
     render(<WrappedView group={group} locale="en" />);
     expect(screen.getByText('Active')).toBeInTheDocument();
     expect(screen.queryByText('Inactive')).not.toBeInTheDocument();
+  });
+
+  it('renders PlaylistCard when allSongs is not empty', () => {
+    render(<WrappedView group={group} locale="en" />);
+    expect(screen.getByTestId('playlist-card')).toBeInTheDocument();
+  });
+
+  it('does not render PlaylistCard when allSongs is empty', () => {
+    mockResult = {
+      ...mockResult,
+      stats: makeStats({ allSongs: [] }),
+    };
+    render(<WrappedView group={group} locale="en" />);
+    expect(screen.queryByTestId('playlist-card')).not.toBeInTheDocument();
+  });
+
+  it('should render fallback icon when thumbnail_url is an invalid URL string', () => {
+    mockResult = {
+      ...mockResult,
+      stats: makeStats({
+        topSong: {
+          id: 'song-1',
+          title: 'Bad Thumb Song',
+          artist: 'Bad Thumb Artist',
+          thumbnail_url: 'not-a-valid-url',
+          genre: null,
+          memberName: 'Alice',
+          avgRating: 4.5,
+          totalVotes: 3,
+          platform_links: [],
+          odesli_page_url: null,
+        },
+        topSongs: [
+          {
+            id: 'song-1',
+            title: 'Bad Thumb Song',
+            artist: 'Bad Thumb Artist',
+            thumbnail_url: 'not-a-valid-url',
+            genre: null,
+            memberName: 'Alice',
+            avgRating: 4.5,
+            totalVotes: 3,
+            platform_links: [],
+            odesli_page_url: null,
+          },
+        ],
+      }),
+    };
+    render(<WrappedView group={group} locale="en" />);
+
+    // With invalid URL, safeThumbUrl returns null, so no <img> is rendered
+    const imgs = document.querySelectorAll('img[src="not-a-valid-url"]');
+    expect(imgs.length).toBe(0);
+    // The song title should still render
+    expect(screen.getAllByText('Bad Thumb Song').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('should render fallback icon when thumbnail_url uses HTTP protocol', () => {
+    mockResult = {
+      ...mockResult,
+      stats: makeStats({
+        topSong: {
+          id: 'song-1',
+          title: 'HTTP Song',
+          artist: 'HTTP Artist',
+          thumbnail_url: 'http://example.com/thumb.jpg',
+          genre: null,
+          memberName: 'Alice',
+          avgRating: 4.5,
+          totalVotes: 3,
+          platform_links: [],
+          odesli_page_url: null,
+        },
+      }),
+    };
+    render(<WrappedView group={group} locale="en" />);
+
+    // HTTP URLs are rejected by safeThumbUrl (only HTTPS allowed)
+    const imgs = document.querySelectorAll('img[src="http://example.com/thumb.jpg"]');
+    expect(imgs.length).toBe(0);
+  });
+
+  it('should call window.location.reload when retry button is clicked in error state', () => {
+    mockResult = { ...mockResult, error: 'Something broke', stats: null };
+    const reloadSpy = vi.fn();
+    Object.defineProperty(window, 'location', {
+      value: { ...window.location, reload: reloadSpy },
+      writable: true,
+      configurable: true,
+    });
+
+    render(<WrappedView group={group} locale="en" />);
+    fireEvent.click(screen.getByText('Retry'));
+
+    expect(reloadSpy).toHaveBeenCalledOnce();
+  });
+
+  it('should not render period selector when availablePeriods is empty', () => {
+    mockResult = {
+      ...mockResult,
+      availablePeriods: [],
+      stats: makeStats(),
+    };
+    render(<WrappedView group={group} locale="en" />);
+    expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
+  });
+
+  it('should not render TopSongCard when topSong is null', () => {
+    mockResult = {
+      ...mockResult,
+      stats: makeStats({ topSong: null }),
+    };
+    render(<WrappedView group={group} locale="en" />);
+    expect(screen.queryByText('Song of the quarter')).not.toBeInTheDocument();
+    expect(screen.queryByText('Song of the year')).not.toBeInTheDocument();
+  });
+
+  it('should not render TopMembersCard when all members have zero songsAdded', () => {
+    mockResult = {
+      ...mockResult,
+      stats: makeStats({
+        topMembers: [
+          {
+            id: 'm1',
+            name: 'Zero',
+            avatar: '0',
+            totalScore: 0,
+            songsAdded: 0,
+            avgReceived: 0,
+            roundsWon: 0,
+          },
+        ],
+      }),
+    };
+    render(<WrappedView group={group} locale="en" />);
+    expect(screen.queryByText('Top members')).not.toBeInTheDocument();
+  });
+
+  it('should not render TopSongsCard when topSongs is empty', () => {
+    mockResult = {
+      ...mockResult,
+      stats: makeStats({ topSongs: [] }),
+    };
+    render(<WrappedView group={group} locale="en" />);
+    expect(screen.queryByText('Top 5 songs')).not.toBeInTheDocument();
+  });
+
+  it('should not render GenresCard when genreDistribution is empty', () => {
+    mockResult = {
+      ...mockResult,
+      stats: makeStats({ genreDistribution: [] }),
+    };
+    render(<WrappedView group={group} locale="en" />);
+    expect(screen.queryByText('Genres')).not.toBeInTheDocument();
+  });
+
+  it('should show numeric rank instead of medal for members beyond 3rd place', () => {
+    mockResult = {
+      ...mockResult,
+      stats: makeStats({
+        topMembers: [
+          {
+            id: 'm1',
+            name: 'First',
+            avatar: 'A',
+            totalScore: 40,
+            songsAdded: 5,
+            avgReceived: 4.5,
+            roundsWon: 3,
+          },
+          {
+            id: 'm2',
+            name: 'Second',
+            avatar: 'B',
+            totalScore: 30,
+            songsAdded: 4,
+            avgReceived: 4.0,
+            roundsWon: 2,
+          },
+          {
+            id: 'm3',
+            name: 'Third',
+            avatar: 'C',
+            totalScore: 20,
+            songsAdded: 3,
+            avgReceived: 3.5,
+            roundsWon: 1,
+          },
+          {
+            id: 'm4',
+            name: 'Fourth',
+            avatar: 'D',
+            totalScore: 10,
+            songsAdded: 2,
+            avgReceived: 3.0,
+            roundsWon: 0,
+          },
+        ],
+      }),
+    };
+    render(<WrappedView group={group} locale="en" />);
+    // The 4th member renders with name and numeric rank instead of medal
+    expect(screen.getByText('Fourth')).toBeInTheDocument();
+    // Verify the 4th rank number is rendered (inside the rank span)
+    const allFours = screen.getAllByText('4');
+    expect(allFours.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('should show numeric rank instead of medal for songs beyond 3rd place', () => {
+    mockResult = {
+      ...mockResult,
+      stats: makeStats({
+        topSongs: [
+          {
+            id: 's1',
+            title: 'Song1',
+            artist: 'A1',
+            thumbnail_url: null,
+            genre: null,
+            memberName: 'Alice',
+            avgRating: 5,
+            totalVotes: 5,
+            platform_links: [],
+            odesli_page_url: null,
+          },
+          {
+            id: 's2',
+            title: 'Song2',
+            artist: 'A2',
+            thumbnail_url: null,
+            genre: null,
+            memberName: 'Bob',
+            avgRating: 4.5,
+            totalVotes: 5,
+            platform_links: [],
+            odesli_page_url: null,
+          },
+          {
+            id: 's3',
+            title: 'Song3',
+            artist: 'A3',
+            thumbnail_url: null,
+            genre: null,
+            memberName: 'Charlie',
+            avgRating: 4,
+            totalVotes: 5,
+            platform_links: [],
+            odesli_page_url: null,
+          },
+          {
+            id: 's4',
+            title: 'FourthSong',
+            artist: 'A4',
+            thumbnail_url: null,
+            genre: null,
+            memberName: 'Dave',
+            avgRating: 3.5,
+            totalVotes: 5,
+            platform_links: [],
+            odesli_page_url: null,
+          },
+        ],
+      }),
+    };
+    render(<WrappedView group={group} locale="en" />);
+    expect(screen.getByText('FourthSong')).toBeInTheDocument();
+  });
+
+  it('should render thumbnail image for songs in topSongs list with valid HTTPS URL', () => {
+    mockResult = {
+      ...mockResult,
+      stats: makeStats({
+        topSongs: [
+          {
+            id: 's1',
+            title: 'Thumb Song In List',
+            artist: 'Thumb Artist',
+            thumbnail_url: 'https://example.com/list-thumb.jpg',
+            genre: null,
+            memberName: 'Alice',
+            avgRating: 4.8,
+            totalVotes: 5,
+            platform_links: [],
+            odesli_page_url: null,
+          },
+        ],
+      }),
+    };
+    render(<WrappedView group={group} locale="en" />);
+    const imgs = document.querySelectorAll('img[src="https://example.com/list-thumb.jpg"]');
+    expect(imgs.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('should hide star rating when song has zero totalVotes in topSongs list', () => {
+    mockResult = {
+      ...mockResult,
+      stats: makeStats({
+        topSongs: [
+          {
+            id: 'song-zero',
+            title: 'Zero Votes Song',
+            artist: 'Zero Artist',
+            thumbnail_url: null,
+            genre: null,
+            memberName: 'Alice',
+            avgRating: 0,
+            totalVotes: 0,
+            platform_links: [],
+            odesli_page_url: null,
+          },
+        ],
+      }),
+    };
+    render(<WrappedView group={group} locale="en" />);
+    expect(screen.getByText('Zero Votes Song')).toBeInTheDocument();
+    // No star rating displayed for zero-vote songs
+    expect(screen.queryByText('0.0')).not.toBeInTheDocument();
   });
 });
