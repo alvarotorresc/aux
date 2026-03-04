@@ -15,6 +15,8 @@ export interface WrappedSong {
   memberName: string;
   avgRating: number;
   totalVotes: number;
+  platform_links: { platform: string; url: string }[];
+  odesli_page_url: string | null;
 }
 
 export interface WrappedMember {
@@ -40,6 +42,7 @@ export interface WrappedStats {
   topSong: WrappedSong | null;
   topMembers: WrappedMember[];
   topSongs: WrappedSong[];
+  allSongs: WrappedSong[];
   genreDistribution: GenreCount[];
   topGenre: string | null;
 }
@@ -89,6 +92,8 @@ export function computeWrappedStats(
       memberName,
       avgRating: avg,
       totalVotes: total,
+      platform_links: song.platform_links ?? [],
+      odesli_page_url: song.odesli_page_url ?? null,
     };
   });
 
@@ -151,6 +156,9 @@ export function computeWrappedStats(
 
   const topGenre = genreDistribution[0]?.genre ?? null;
 
+  // All songs sorted by rating (for playlist)
+  const allSongs = [...songStats].sort((a, b) => b.avgRating - a.avgRating);
+
   return {
     period,
     totalSongs: periodSongs.length,
@@ -159,6 +167,7 @@ export function computeWrappedStats(
     topSong,
     topMembers: memberStats,
     topSongs,
+    allSongs,
     genreDistribution,
     topGenre,
   };

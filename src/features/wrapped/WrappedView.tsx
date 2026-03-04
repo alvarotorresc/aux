@@ -6,6 +6,7 @@ import { formatPeriodLabel, type WrappedPeriod, type WrappedStats } from '../../
 import { GenreBadge } from '../../components/ui/GenreBadge';
 import { Button } from '../../components/ui/Button';
 import { useWrapped } from './useWrapped';
+import { PlaylistCard } from './PlaylistCard';
 
 interface WrappedViewProps {
   group: Group;
@@ -479,6 +480,11 @@ export function WrappedView({ group, locale }: WrappedViewProps) {
               <TopMembersCard stats={stats} locale={locale} />
               <TopSongsCard stats={stats} locale={locale} />
               <GenresCard stats={stats} locale={locale} />
+              {stats.allSongs.length > 0 && (
+                <AnimatedCard delay={500}>
+                  <PlaylistCard songs={stats.allSongs} locale={locale} />
+                </AnimatedCard>
+              )}
             </div>
           )}
         </>
