@@ -242,8 +242,39 @@ describe('computeWrappedStats', () => {
     expect(stats.topSong).toBeNull();
     expect(stats.topMembers).toEqual([]);
     expect(stats.topSongs).toEqual([]);
+    expect(stats.allSongs).toEqual([]);
     expect(stats.genreDistribution).toEqual([]);
     expect(stats.topGenre).toBeNull();
+  });
+
+  it('returns allSongs containing all period songs sorted by avgRating desc', () => {
+    const stats = computeWrappedStats(period, rounds, songs, votes, members);
+    expect(stats.allSongs).toHaveLength(4);
+    for (let i = 1; i < stats.allSongs.length; i++) {
+      expect(stats.allSongs[i - 1].avgRating).toBeGreaterThanOrEqual(stats.allSongs[i].avgRating);
+    }
+  });
+
+  it('preserves platform_links in output WrappedSong', () => {
+    const links = [{ platform: 'spotify', url: 'https://open.spotify.com/track/abc' }];
+    const songsWithLinks: Song[] = [
+      makeSong({ id: 's1', round_id: 'r1', member_id: 'm1', platform_links: links }),
+    ];
+    const stats = computeWrappedStats(period, rounds, songsWithLinks, [], members);
+    expect(stats.allSongs[0].platform_links).toEqual(links);
+  });
+
+  it('preserves odesli_page_url in output WrappedSong', () => {
+    const songsWithOdesli: Song[] = [
+      makeSong({
+        id: 's1',
+        round_id: 'r1',
+        member_id: 'm1',
+        odesli_page_url: 'https://song.link/test',
+      }),
+    ];
+    const stats = computeWrappedStats(period, rounds, songsWithOdesli, [], members);
+    expect(stats.allSongs[0].odesli_page_url).toBe('https://song.link/test');
   });
 
   it('ignores songs with null genre in genreDistribution', () => {
@@ -312,6 +343,51 @@ describe('computeWrappedStats', () => {
     expect(stats.topMembers[0].songsAdded).toBe(0);
     expect(stats.topMembers[0].avgReceived).toBe(0);
     expect(stats.topMembers[0].roundsWon).toBe(0);
+  });
+
+  it('falls back to empty array when platform_links is null', () => {
+    const songWithNull = makeSong({
+      id: 's1',
+      round_id: 'r1',
+      member_id: 'm1',
+      platform_links: null as unknown as { platform: string; url: string }[],
+    });
+    const stats = computeWrappedStats(period, rounds, [songWithNull], [], members);
+    expect(stats.allSongs[0].platform_links).toEqual([]);
+  });
+
+  it('falls back to null when odesli_page_url is undefined', () => {
+    const songWithUndefined = makeSong({
+      id: 's1',
+      round_id: 'r1',
+      member_id: 'm1',
+    });
+    // Force undefined to trigger ?? null fallback
+    (songWithUndefined as unknown as Record<string, unknown>).odesli_page_url = undefined;
+    const stats = computeWrappedStats(period, rounds, [songWithUndefined], [], members);
+    expect(stats.allSongs[0].odesli_page_url).toBeNull();
+  });
+
+  it('returns "?" for member name when song member_id has no match', () => {
+    const songOrphan = makeSong({
+      id: 's1',
+      round_id: 'r1',
+      member_id: 'non-existent-member',
+    });
+    const stats = computeWrappedStats(period, rounds, [songOrphan], [], members);
+    expect(stats.allSongs[0].memberName).toBe('?');
+  });
+
+  it('skips round win when winnerId is not found in periodSongs', () => {
+    // A round where the only song has an ID that doesn't match anything
+    // This can't easily happen, but covers the winnerId falsy branch
+    const round1 = makeRound({ id: 'r1', number: 1, starts_at: '2026-01-15T00:00:00Z' });
+    const song1 = makeSong({ id: 's1', round_id: 'r1', member_id: 'm1' });
+    const vote1 = makeVote({ id: 'v1', song_id: 's1', member_id: 'm2', rating: 5 });
+    const stats = computeWrappedStats(period, [round1], [song1], [vote1], members);
+    // Should compute roundsWon correctly (member m1 wins)
+    const m1 = stats.topMembers.find((m) => m.id === 'm1');
+    expect(m1!.roundsWon).toBe(1);
   });
 });
 

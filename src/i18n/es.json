@@ -103,6 +103,12 @@
   "wrapped.genres": "Generos",
   "wrapped.noData": "Aun no hay suficientes datos para este periodo",
   "wrapped.selectPeriod": "Seleccionar periodo",
+  "wrapped.playlist": "Playlist",
+  "wrapped.openPlaylist": "Abrir playlist",
+  "wrapped.openSongs": "Abrir canciones",
+  "wrapped.copyLinks": "Copiar enlaces",
+  "wrapped.linksCopied": "Enlaces copiados!",
+  "wrapped.noLinksForPlatform": "No hay enlaces para esta plataforma",
   "wrapped.back": "Volver al ranking",
   "footer.madeWith": "Hecho con",
   "footer.by": "por"
