@@ -363,7 +363,7 @@ describe('computeWrappedStats', () => {
       member_id: 'm1',
     });
     // Force undefined to trigger ?? null fallback
-    (songWithUndefined as Record<string, unknown>).odesli_page_url = undefined;
+    (songWithUndefined as unknown as Record<string, unknown>).odesli_page_url = undefined;
     const stats = computeWrappedStats(period, rounds, [songWithUndefined], [], members);
     expect(stats.allSongs[0].odesli_page_url).toBeNull();
   });
