@@ -60,6 +60,8 @@
   "group.addSong.resolving": "Resolviendo...",
   "group.addSong.genreLabel": "Género",
   "group.addSong.genrePlaceholder": "Género (opcional)",
+  "group.addSong.confirm": "Confirmar",
+  "group.addSong.cancel": "Cancelar",
   "group.addSong.error": "No se pudo resolver ese enlace. Prueba con otro.",
   "group.songCard.addedBy": "Anadida por",
   "group.songCard.yourTrack": "Tu cancion",
