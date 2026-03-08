@@ -509,6 +509,110 @@ describe('useGroup', () => {
     );
   });
 
+  it('should throw error when duplicate song exists in the round', async () => {
+    mockEnsureCurrentRound.mockResolvedValue(makeRound());
+
+    const existingSong = makeSong({
+      id: 's1',
+      member_id: 'member-2',
+      round_id: 'round-1',
+      title: 'Bohemian Rhapsody',
+      artist: 'Queen',
+    });
+    mockSongsSelect.mockResolvedValue({ data: [existingSong], error: null });
+    mockVotesSelect.mockResolvedValue({ data: [], error: null });
+
+    mockResolveSongLink.mockResolvedValue({
+      title: 'Bohemian Rhapsody',
+      artist: 'Queen',
+      album: null,
+      thumbnailUrl: null,
+      platformLinks: [],
+      pageUrl: 'https://song.link/test',
+      genre: 'rock',
+    });
+
+    const { result } = renderHook(() => useGroup('group-1', 'member-1'));
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    await expect(result.current.addSong('https://open.spotify.com/track/abc')).rejects.toThrow(
+      'This song has already been added to this round',
+    );
+    expect(mockSongsInsert).not.toHaveBeenCalled();
+  });
+
+  it('should detect duplicates case-insensitively', async () => {
+    mockEnsureCurrentRound.mockResolvedValue(makeRound());
+
+    const existingSong = makeSong({
+      id: 's1',
+      member_id: 'member-2',
+      round_id: 'round-1',
+      title: 'BOHEMIAN RHAPSODY',
+      artist: '  Queen  ',
+    });
+    mockSongsSelect.mockResolvedValue({ data: [existingSong], error: null });
+    mockVotesSelect.mockResolvedValue({ data: [], error: null });
+
+    mockResolveSongLink.mockResolvedValue({
+      title: 'bohemian rhapsody',
+      artist: 'queen',
+      album: null,
+      thumbnailUrl: null,
+      platformLinks: [],
+      pageUrl: 'https://song.link/test',
+      genre: null,
+    });
+
+    const { result } = renderHook(() => useGroup('group-1', 'member-1'));
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    await expect(result.current.addSong('https://open.spotify.com/track/abc')).rejects.toThrow(
+      'This song has already been added to this round',
+    );
+  });
+
+  it('should skip resolution when preResolved is provided', async () => {
+    mockEnsureCurrentRound.mockResolvedValue(makeRound());
+
+    const preResolved = {
+      title: 'Test Song',
+      artist: 'Test Artist',
+      album: null,
+      thumbnailUrl: null,
+      platformLinks: [],
+      pageUrl: 'https://song.link/test',
+      genre: 'rock',
+    };
+
+    const insertedSong = makeSong({ id: 'new-1', title: 'Test Song', artist: 'Test Artist' });
+    mockSongsInsert.mockResolvedValue({ data: insertedSong, error: null });
+
+    const { result } = renderHook(() => useGroup('group-1', 'member-1'));
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    await act(async () => {
+      await result.current.addSong('https://example.com', 'rock', preResolved);
+    });
+
+    expect(mockResolveSongLink).not.toHaveBeenCalled();
+    expect(mockSongsInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Test Song',
+        artist: 'Test Artist',
+      }),
+    );
+  });
+
   it('should throw error when insert fails', async () => {
     mockEnsureCurrentRound.mockResolvedValue(makeRound());
 

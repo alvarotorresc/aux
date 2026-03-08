@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { ensureCurrentRound } from '../../lib/rounds';
 import { resolveSongLink } from '../../lib/odesli';
+import type { ResolvedSong } from '../../lib/odesli';
 import { GENRES } from '../../lib/genres';
 import type { Member, Round, Song, Vote, SongWithVotes } from '../../lib/types';
 
@@ -18,7 +19,7 @@ interface UseGroupResult {
   members: Member[];
   isLoading: boolean;
   error: string | null;
-  addSong: (url: string, genre?: string | null) => Promise<void>;
+  addSong: (url: string, genre?: string | null, preResolved?: ResolvedSong) => Promise<void>;
   voteSong: (songId: string, rating: number) => Promise<void>;
   refetch: () => Promise<void>;
 }
@@ -159,7 +160,7 @@ export function useGroup(
 
   /** Add a new song by resolving the URL via Odesli and inserting into Supabase */
   const addSong = useCallback(
-    async (url: string, genre: string | null = null) => {
+    async (url: string, genre: string | null = null, preResolved?: ResolvedSong) => {
       if (!round || !memberId) {
         throw new Error('Cannot add song: no active round or member');
       }
@@ -172,8 +173,20 @@ export function useGroup(
         throw new Error(`You can only add ${songsPerRound} songs per round`);
       }
 
-      // Resolve via Odesli
-      const resolved = await resolveSongLink(url);
+      // Use pre-resolved data if available, otherwise resolve via Odesli
+      const resolved = preResolved ?? (await resolveSongLink(url));
+
+      // Check for duplicates in the current round (normalized title + artist)
+      const normalizedTitle = resolved.title.toLowerCase().trim();
+      const normalizedArtist = resolved.artist.toLowerCase().trim();
+      const isDuplicate = songsRef.current.some(
+        (s) =>
+          s.title.toLowerCase().trim() === normalizedTitle &&
+          s.artist.toLowerCase().trim() === normalizedArtist,
+      );
+      if (isDuplicate) {
+        throw new Error('This song has already been added to this round');
+      }
 
       // Insert into Supabase
       const { data: inserted, error: insertError } = await supabase
