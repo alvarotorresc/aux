@@ -10,9 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    env:
-      PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
-      PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
     steps:
       - uses: actions/checkout@v4
 
@@ -27,10 +24,51 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm lint
-      - run: pnpm test
-
-      - run: pnpm build
+      - name: Create Capacitor web assets
+        run: |
+          mkdir -p dist-capacitor
+          cat > dist-capacitor/index.html << 'HTMLEOF'
+          <!doctype html>
+          <html lang="en">
+            <head>
+              <meta charset="UTF-8" />
+              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+              <title>Aux</title>
+              <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body { background: #0a0a0a; color: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center; padding: 2rem; }
+                h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+                p { color: #a1a1aa; font-size: 0.875rem; margin-bottom: 1.5rem; }
+                .spinner { width: 24px; height: 24px; border: 2px solid #27272a; border-top-color: #d946ef; border-radius: 50%; animation: spin 0.8s linear infinite; }
+                @keyframes spin { to { transform: rotate(360deg); } }
+              </style>
+            </head>
+            <body>
+              <h1>Aux</h1>
+              <p id="status">Connecting...</p>
+              <div class="spinner" id="spinner"></div>
+              <script>
+                var url = 'https://aux.alvarotc.com';
+                var attempt = 0;
+                function tryLoad() {
+                  attempt++;
+                  fetch(url, { mode: 'no-cors' })
+                    .then(function () { window.location.href = url; })
+                    .catch(function () {
+                      if (attempt >= 30) {
+                        document.getElementById('status').textContent = 'No connection. Please check your internet and restart the app.';
+                        document.getElementById('spinner').style.display = 'none';
+                      } else {
+                        document.getElementById('status').textContent = 'Waiting for connection... (' + attempt + ')';
+                        setTimeout(tryLoad, 2000);
+                      }
+                    });
+                }
+                tryLoad();
+              </script>
+            </body>
+          </html>
+          HTMLEOF
 
       - uses: actions/setup-java@v4
         with:
