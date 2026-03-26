@@ -30,6 +30,10 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonicalURL} />
     <title>{title}</title>
+    <script
+      defer
+      src="https://analytics.alvarotc.com/script.js"
+      data-website-id="1cfd8687-c861-45bf-90ab-65cb1c5ff8d0"></script>
   </head>
   <body>
     <slot />
